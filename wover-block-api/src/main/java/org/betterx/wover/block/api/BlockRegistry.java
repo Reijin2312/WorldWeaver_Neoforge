@@ -19,6 +19,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.FireBlock;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.core.registries.BuiltInRegistries;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -29,6 +30,12 @@ import org.jetbrains.annotations.NotNull;
 
 public class BlockRegistry {
     private static final Map<ModCore, BlockRegistry> REGISTRIES = new HashMap<>();
+    private static final Comparator<BlockRegistry> REGISTRY_ORDER = Comparator
+            .comparing((BlockRegistry registry) -> registry.C.modId)
+            .thenComparing(registry -> registry.C.namespace);
+    private static final Comparator<ResourceLocation> ID_ORDER = Comparator
+            .comparing(ResourceLocation::getNamespace)
+            .thenComparing(ResourceLocation::getPath);
     public final ModCore C;
     private final Map<ResourceLocation, Block> blocks = new HashMap<>();
     private Map<Block, TagKey<Block>[]> datagenTags;
@@ -170,16 +177,21 @@ public class BlockRegistry {
 
     private void performBlockRegistration(RegisterEvent.RegisterHelper<Block> helper) {
         ensureInitialized();
-        blocks.forEach((id, block) -> {
-            ensureIntrusiveHolder(block);
-            helper.register(id, block);
-            var key = ResourceKey.create(Registries.BLOCK, id);
-            BuiltInRegistries.BLOCK
-                    .getHolder(key)
-                    .ifPresent(holder -> {
-                        ((org.betterx.wover.block.impl.BlockHolderBridge) block).wover$setBuiltInRegistryHolder(holder);
-                    });
-        });
+        blocks.entrySet()
+              .stream()
+              .sorted(Map.Entry.comparingByKey(ID_ORDER))
+              .forEach(entry -> {
+                  ResourceLocation id = entry.getKey();
+                  Block block = entry.getValue();
+                  ensureIntrusiveHolder(block);
+                  helper.register(id, block);
+                  var key = ResourceKey.create(Registries.BLOCK, id);
+                  BuiltInRegistries.BLOCK
+                          .getHolder(key)
+                          .ifPresent(holder -> {
+                              ((org.betterx.wover.block.impl.BlockHolderBridge) block).wover$setBuiltInRegistryHolder(holder);
+                          });
+              });
     }
 
     private static void ensureIntrusiveHolder(Block block) {
@@ -188,7 +200,13 @@ public class BlockRegistry {
 
     public static void onRegister(RegisterEvent event) {
         if (event.getRegistryKey().equals(Registries.BLOCK)) {
-            event.register(Registries.BLOCK, helper -> REGISTRIES.values().forEach(reg -> reg.performBlockRegistration(helper)));
+            event.register(
+                    Registries.BLOCK,
+                    helper -> REGISTRIES.values()
+                                        .stream()
+                                        .sorted(REGISTRY_ORDER)
+                                        .forEach(reg -> reg.performBlockRegistration(helper))
+            );
         }
     }
 
