@@ -196,23 +196,29 @@ public class WoverBiomeData extends BiomeData {
     }
 
 
+    static @Nullable Registry<BiomeData> tryGetDataRegistry(
+            String forWhat,
+            ResourceKey<Biome> ofBiome
+    ) {
+        RegistryAccess acc = WorldState.registryAccess();
+
+        if (acc == null) {
+            RegistryAccess allStage = WorldState.allStageRegistryAccess();
+            if (allStage == null) {
+                return null;
+            }
+            if (preFinalAccessWarning++ < 5)
+                LibWoverBiome.C.log.verboseWarning("Accessing " + forWhat + " of " + ofBiome + " before registry is ready!");
+            acc = allStage;
+        }
+        return acc.registry(BiomeDataRegistry.BIOME_DATA_REGISTRY).orElse(null);
+    }
+
     public static @NotNull Registry<BiomeData> getDataRegistry(
             String forWhat,
             ResourceKey<Biome> ofBiome
     ) throws IllegalStateException {
-        RegistryAccess acc = WorldState.registryAccess();
-
-        if (acc == null) {
-            if (WorldState.allStageRegistryAccess() == null) {
-                throw new IllegalStateException("Accessing " + forWhat + " of " + ofBiome + " before any registry is ready!");
-            }
-            if (preFinalAccessWarning++ < 5)
-                LibWoverBiome.C.log.verboseWarning("Accessing " + forWhat + " of " + ofBiome + " before registry is ready!");
-            acc = WorldState.allStageRegistryAccess();
-        }
-        final Registry<BiomeData> reg = acc != null
-                ? acc.registry(BiomeDataRegistry.BIOME_DATA_REGISTRY).orElse(null)
-                : null;
+        final Registry<BiomeData> reg = tryGetDataRegistry(forWhat, ofBiome);
 
         if (reg == null)
             throw new IllegalStateException("Accessing " + forWhat + " of " + ofBiome + " before biome data registry is ready!");
@@ -226,7 +232,8 @@ public class WoverBiomeData extends BiomeData {
         //null means, that we did not yet check for an edge parent
         if (edgeParent != null) return edgeParent.orElse(null);
 
-        final Registry<BiomeData> reg = getDataRegistry("edge parent", biomeKey);
+        final Registry<BiomeData> reg = tryGetDataRegistry("edge parent", biomeKey);
+        if (reg == null) return null;
 
         for (Map.Entry<ResourceKey<BiomeData>, BiomeData> entry : reg.entrySet()) {
             if (entry.getValue() instanceof WoverBiomeData b && this.isSame(b.edge)) {
@@ -256,13 +263,15 @@ public class WoverBiomeData extends BiomeData {
 
     public BiomeData getEdgeData() {
         if (edgeData == null) return null;
-        final Registry<BiomeData> reg = getDataRegistry("edge biome", biomeKey);
+        final Registry<BiomeData> reg = tryGetDataRegistry("edge biome", biomeKey);
+        if (reg == null) return null;
         return reg.get(edgeData);
     }
 
     public BiomeData getParentData() {
         if (parentData == null) return null;
-        final Registry<BiomeData> reg = getDataRegistry("parent biome", biomeKey);
+        final Registry<BiomeData> reg = tryGetDataRegistry("parent biome", biomeKey);
+        if (reg == null) return null;
         return reg.get(parentData);
     }
 

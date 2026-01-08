@@ -52,7 +52,8 @@ public class WoverBiomePicker {
             BiomeData sourceBiome,
             BiConsumer<BiomeData, Float> consumeChild
     ) {
-        final Registry<BiomeData> reg = WoverBiomeData.getDataRegistry("biome alternatives", sourceBiome.biomeKey);
+        final Registry<BiomeData> reg = WoverBiomeData.tryGetDataRegistry("biome alternatives", sourceBiome.biomeKey);
+        if (reg == null) return;
 
         for (Map.Entry<ResourceKey<BiomeData>, BiomeData> entry : reg.entrySet()) {
             if (entry.getValue() instanceof WoverBiomeData b

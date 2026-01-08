@@ -70,6 +70,30 @@ public interface BiomeModification {
     );
 
     /**
+     * A network-safe codec that avoids resolving PlacedFeatures during sync.
+     */
+    Codec<BiomeModification> NETWORK_CODEC = RecordCodecBuilder.create(instance ->
+            instance.group(
+                    BiomePredicate.CODEC.fieldOf("predicate").forGetter(BiomeModification::predicate),
+                    FeatureMap.NETWORK_CODEC
+                            .optionalFieldOf("features", List.of())
+                            .forGetter(BiomeModification::featureKeys),
+                    TagKey.codec(Registries.BIOME)
+                          .listOf()
+                          .optionalFieldOf("biome_tags", List.of())
+                          .forGetter(BiomeModification::biomeTags),
+                    Codec.list(MobSpawnSettings.SpawnerData.CODEC)
+                         .optionalFieldOf("spawns", List.of())
+                         .forGetter(BiomeModification::spawns)
+            ).apply(instance, (predicate, features, tags, spawns) -> new BiomeModificationImpl(
+                    predicate,
+                    FeatureMap.ofKeys(features),
+                    tags,
+                    spawns
+            ))
+    );
+
+    /**
      * A predicate that determines if this modification should be applied to a biome.
      * If not set, the modification will be applied to <b>ALL</b> biomes! That is probably
      * never what you want.
@@ -85,6 +109,24 @@ public interface BiomeModification {
      * @return The features.
      */
     List<List<Holder<PlacedFeature>>> features();
+
+    /**
+     * Internal feature-key view used for network sync.
+     *
+     * @return feature keys grouped by generation step.
+     */
+    @ApiStatus.Internal
+    default List<List<ResourceKey<PlacedFeature>>> featureKeys() {
+        List<List<ResourceKey<PlacedFeature>>> keyLists = new ArrayList<>(features().size());
+        for (List<Holder<PlacedFeature>> list : features()) {
+            List<ResourceKey<PlacedFeature>> keys = new ArrayList<>(list.size());
+            for (Holder<PlacedFeature> holder : list) {
+                holder.unwrapKey().ifPresent(keys::add);
+            }
+            keyLists.add(keys);
+        }
+        return keyLists;
+    }
 
     /**
      * The spawns that should be added to the biome.

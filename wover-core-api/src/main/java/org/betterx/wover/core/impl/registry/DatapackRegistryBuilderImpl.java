@@ -13,6 +13,7 @@ import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.neoforged.neoforge.registries.DataPackRegistryEvent;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -29,6 +30,8 @@ public class DatapackRegistryBuilderImpl {
             ResourceKey<? extends Registry<T>> key,
             @Nullable
             Codec<T> elementCodec,
+            @Nullable
+            Codec<T> networkCodec,
             Consumer<BootstrapContext<T>> bootstrap) {
 
         public BootstrapContext<T> getContext(
@@ -63,7 +66,7 @@ public class DatapackRegistryBuilderImpl {
             int priority
     ) {
         LibWoverCore.C.log.debug("Adding dynamic registry bootstrap: " + key.location());
-        REGISTRIES.add(new Entry<>(key, null, bootstrap), Math.max(MAX_READONLY_PRIORITY + 1, priority));
+        REGISTRIES.add(new Entry<>(key, null, null, bootstrap), Math.max(MAX_READONLY_PRIORITY + 1, priority));
     }
 
     public static <T> void registerReadOnly(
@@ -86,7 +89,16 @@ public class DatapackRegistryBuilderImpl {
             Codec<T> elementCodec,
             Consumer<BootstrapContext<T>> bootstrap
     ) {
-        register(key, elementCodec, DEFAULT_PRIORITY, bootstrap);
+        register(key, elementCodec, elementCodec, DEFAULT_PRIORITY, bootstrap);
+    }
+
+    public static <T> void register(
+            ResourceKey<? extends Registry<T>> key,
+            Codec<T> elementCodec,
+            @Nullable Codec<T> networkCodec,
+            Consumer<BootstrapContext<T>> bootstrap
+    ) {
+        register(key, elementCodec, networkCodec, DEFAULT_PRIORITY, bootstrap);
     }
 
     public static <T> void register(
@@ -95,18 +107,38 @@ public class DatapackRegistryBuilderImpl {
             int priority,
             Consumer<BootstrapContext<T>> bootstrap
     ) {
+        register(key, elementCodec, elementCodec, priority, bootstrap);
+    }
+
+    public static <T> void register(
+            ResourceKey<? extends Registry<T>> key,
+            Codec<T> elementCodec,
+            @Nullable Codec<T> networkCodec,
+            int priority,
+            Consumer<BootstrapContext<T>> bootstrap
+    ) {
         if (isRegistered(key.location())) {
             throw new IllegalStateException("Registry with id " + key.location() + " was already registered!");
         }
 
         LibWoverCore.C.log.debug("Adding dynamic registry: " + key.location());
-        REGISTRIES.add(new Entry<>(key, elementCodec, bootstrap), priority);
+        REGISTRIES.add(new Entry<>(key, elementCodec, networkCodec, bootstrap), priority);
     }
 
     public static void forEach(BiConsumer<ResourceKey<? extends Registry<?>>, Codec<?>> consumer) {
         initEntrypoints();
         REGISTRIES.forEach(entry -> {
             consumer.accept(entry.key, entry.elementCodec);
+        });
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public static void registerDatapackRegistries(DataPackRegistryEvent.NewRegistry event) {
+        initEntrypoints();
+        REGISTRIES.forEach(entry -> {
+            if (entry.definesRegistry()) {
+                event.dataPackRegistry((ResourceKey) entry.key, (Codec) entry.elementCodec, (Codec) entry.networkCodec);
+            }
         });
     }
 

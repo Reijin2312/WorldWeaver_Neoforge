@@ -95,11 +95,12 @@ public class GenerationSettingsWorker {
                 .map(Holder::value);
     }
 
-    public void addFeatures(FeatureMap features) {
+    public void addFeatures(FeatureMap featureMap) {
+        featureMap.resolve(this.features);
         boolean hasNewFeatures = false;
-        for (int index = 0; index < features.size(); index++) {
+        for (int index = 0; index < featureMap.size(); index++) {
             if (index < GenerationStep.Decoration.values().length) {
-                if (!features.get(index).isEmpty()) {
+                if (!featureMap.get(index).isEmpty()) {
                     hasNewFeatures = true;
                     break;
                 }
@@ -108,9 +109,9 @@ public class GenerationSettingsWorker {
         if (!hasNewFeatures) return;
 
         unfreezeFeatures();
-        for (int index = 0; index < features.size(); index++) {
+        for (int index = 0; index < featureMap.size(); index++) {
             if (index < GenerationStep.Decoration.values().length) {
-                final LinkedList<Holder<PlacedFeature>> newFeatures = features.get(index);
+                final LinkedList<Holder<PlacedFeature>> newFeatures = featureMap.get(index);
                 if (!newFeatures.isEmpty()) {
                     final GenerationStep.Decoration step = GenerationStep.Decoration.values()[index];
 

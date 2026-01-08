@@ -287,6 +287,10 @@ public class BiomeData {
         return KEY_CODEC;
     }
 
+    public KeyDispatchDataCodec<? extends BiomeData> networkCodec() {
+        return codec();
+    }
+
     public @Nullable Holder<Biome> biomeHolder() {
         if (WorldState.registryAccess() == null) {
             if (WorldState.allStageRegistryAccess() == null) return null;

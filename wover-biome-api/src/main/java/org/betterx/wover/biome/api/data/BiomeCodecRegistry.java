@@ -11,6 +11,8 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.KeyDispatchDataCodec;
 
+import org.jetbrains.annotations.Nullable;
+
 public class BiomeCodecRegistry {
     public static final ResourceKey<Registry<MapCodec<? extends BiomeData>>> BIOME_CODEC_REGISTRY =
             DatapackRegistryBuilder.createRegistryKey(LibWoverSurface.C.id("wover/biome_codec"));
@@ -22,5 +24,18 @@ public class BiomeCodecRegistry {
             KeyDispatchDataCodec<? extends BiomeData> keyDispatchDataCodec
     ) {
         return BiomeCodecRegistryImpl.register(BiomeCodecRegistryImpl.BIOME_CODECS, location, keyDispatchDataCodec);
+    }
+
+    public static MapCodec<? extends BiomeData> register(
+            ResourceLocation location,
+            KeyDispatchDataCodec<? extends BiomeData> keyDispatchDataCodec,
+            @Nullable KeyDispatchDataCodec<? extends BiomeData> networkKeyDispatchDataCodec
+    ) {
+        return BiomeCodecRegistryImpl.register(
+                BiomeCodecRegistryImpl.BIOME_CODECS,
+                location,
+                keyDispatchDataCodec,
+                networkKeyDispatchDataCodec
+        );
     }
 }

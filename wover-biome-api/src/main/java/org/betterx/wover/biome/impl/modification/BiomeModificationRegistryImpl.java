@@ -47,6 +47,7 @@ public class BiomeModificationRegistryImpl {
         DatapackRegistryBuilder.register(
                 BiomeModificationRegistry.BIOME_MODIFICATION_REGISTRY,
                 BiomeModification.CODEC,
+                BiomeModification.NETWORK_CODEC,
                 BiomeModificationRegistryImpl::onBootstrap
         );
 

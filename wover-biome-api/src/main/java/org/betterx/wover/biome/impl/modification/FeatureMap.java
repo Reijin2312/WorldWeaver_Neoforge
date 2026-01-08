@@ -3,6 +3,9 @@ package org.betterx.wover.biome.impl.modification;
 import com.mojang.serialization.Codec;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 
@@ -11,9 +14,16 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.BiConsumer;
+import org.jetbrains.annotations.Nullable;
 
 public class FeatureMap extends ArrayList<LinkedList<Holder<PlacedFeature>>> {
     public static final Codec<List<List<Holder<PlacedFeature>>>> CODEC = PlacedFeature.CODEC.listOf().listOf();
+    public static final Codec<List<List<ResourceKey<PlacedFeature>>>> NETWORK_CODEC =
+            ResourceKey.codec(Registries.PLACED_FEATURE).listOf().listOf();
+
+    @Nullable
+    private List<List<ResourceKey<PlacedFeature>>> keyFeatures;
+    private boolean resolved;
 
     public void addFeature(GenerationStep.Decoration decoration, Holder<PlacedFeature> feature) {
         this.getFeatures(decoration).add(feature);
@@ -67,5 +77,52 @@ public class FeatureMap extends ArrayList<LinkedList<Holder<PlacedFeature>>> {
             }
         }
         return map;
+    }
+
+    public static FeatureMap ofKeys(List<List<ResourceKey<PlacedFeature>>> features) {
+        FeatureMap map = new FeatureMap();
+        map.keyFeatures = features;
+        if (features != null) {
+            for (int i = 0; i < features.size(); i++) {
+                map.add(new LinkedList<>());
+            }
+        }
+        return map;
+    }
+
+    public List<List<ResourceKey<PlacedFeature>>> keys() {
+        if (keyFeatures != null) {
+            return keyFeatures;
+        }
+        List<List<ResourceKey<PlacedFeature>>> keys = new ArrayList<>(this.size());
+        for (int i = 0; i < this.size(); i++) {
+            LinkedList<Holder<PlacedFeature>> list = this.get(i);
+            List<ResourceKey<PlacedFeature>> keyList = new ArrayList<>(list.size());
+            for (Holder<PlacedFeature> holder : list) {
+                holder.unwrapKey().ifPresent(keyList::add);
+            }
+            keys.add(keyList);
+        }
+        return keys;
+    }
+
+    public void resolve(Registry<PlacedFeature> registry) {
+        if (resolved || keyFeatures == null) {
+            return;
+        }
+        for (int i = 0; i < keyFeatures.size(); i++) {
+            List<ResourceKey<PlacedFeature>> keys = keyFeatures.get(i);
+            while (this.size() <= i) {
+                this.add(new LinkedList<>());
+            }
+            LinkedList<Holder<PlacedFeature>> holders = this.get(i);
+            if (!holders.isEmpty()) {
+                continue;
+            }
+            for (ResourceKey<PlacedFeature> key : keys) {
+                registry.getHolder(key).ifPresent(holders::add);
+            }
+        }
+        resolved = true;
     }
 }
