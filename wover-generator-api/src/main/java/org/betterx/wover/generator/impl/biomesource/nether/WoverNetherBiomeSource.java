@@ -157,13 +157,13 @@ public class WoverNetherBiomeSource extends WoverBiomeSource implements
         if (!wasBound()) reloadBiomes(false);
 
         if (biomeMap == null)
-            return this.possibleBiomes().stream().findFirst().get();
+            return applyFallbackBiomeSource(this.possibleBiomes().stream().findFirst().get(), biomeX, biomeY, biomeZ, var4);
 
         if ((biomeX & 63) == 0 && (biomeZ & 63) == 0) {
             biomeMap.clearCache();
         }
         WoverBiomePicker.PickableBiome bb = biomeMap.getBiome(biomeX << 2, biomeY << 2, biomeZ << 2);
-        return bb.biome;
+        return applyFallbackBiomeSource(bb.biome, biomeX, biomeY, biomeZ, var4);
     }
 
 

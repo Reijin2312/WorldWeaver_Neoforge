@@ -175,7 +175,7 @@ public class WorldSetupScreen extends LayoutScreen implements BiomeSourceConfigP
 
         final Optional<HolderSet.Named<WorldPreset>> normal = worldPresets.getTag(WorldPresetTags.NORMAL);
         if (normal.isPresent()) {
-            Set<ChunkGenerator> generators = new HashSet<>();
+            Set<ResourceLocation> seenPresets = new HashSet<>();
             final Language language = Language.getInstance();
             PriorityLinkedList<DimensionValue> options = new PriorityLinkedList<>();
             normal
@@ -193,24 +193,14 @@ public class WorldSetupScreen extends LayoutScreen implements BiomeSourceConfigP
                                                                           .createWorldDimensions()
                                                                           .get(forDimension);
 
-                        if (targetDimension.isPresent()) {
-                            final ChunkGenerator generator = targetDimension.get().generator();
+                        if (targetDimension.isPresent() && seenPresets.add(presetKey)) {
+                            final DimensionValue dimensionValue = new DimensionValue(
+                                    preset,
+                                    preset.unwrapKey().orElseThrow(),
+                                    targetDimension.get()
+                            );
 
-                            if (!generators.contains(generator)) {
-                                final DimensionValue dimensionValue = new DimensionValue(
-                                        preset,
-                                        preset.unwrapKey().orElseThrow(),
-                                        targetDimension.get()
-                                );
-
-                                generators.add(generator);
-                                options.add(dimensionValue, -1 * info.sortOrder());
-                            } else {
-                                LibWoverWorldGenerator.C.log.debug(
-                                        "Skipping duplicate generator for preset {}",
-                                        presetKey
-                                );
-                            }
+                            options.add(dimensionValue, -1 * info.sortOrder());
                         }
                     });
 

@@ -18,6 +18,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeSource;
+import net.minecraft.world.level.biome.Climate;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 
 import com.google.common.base.Stopwatch;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public abstract class WoverBiomeSource extends BiomeSource implements
         ReloadableBiomeSource,
@@ -34,6 +36,8 @@ public abstract class WoverBiomeSource extends BiomeSource implements
         MergeableBiomeSource<WoverBiomeSource> {
     private boolean didCreatePickers;
     Set<Holder<Biome>> dynamicPossibleBiomes;
+    @Nullable
+    private BiomeSource fallbackBiomeSource;
     protected long currentSeed;
     protected int maxHeight;
 
@@ -53,6 +57,7 @@ public abstract class WoverBiomeSource extends BiomeSource implements
     public WoverBiomeSource(long seed) {
         didCreatePickers = false;
         dynamicPossibleBiomes = Set.of();
+        fallbackBiomeSource = null;
         currentSeed = seed;
     }
 
@@ -140,6 +145,37 @@ public abstract class WoverBiomeSource extends BiomeSource implements
         return true;
     }
 
+    protected final Holder<Biome> applyFallbackBiomeSource(
+            Holder<Biome> biome,
+            int biomeX,
+            int biomeY,
+            int biomeZ,
+            Climate.Sampler sampler
+    ) {
+        final BiomeSource fallbackSource = this.fallbackBiomeSource;
+        if (fallbackSource == null || fallbackSource == this) {
+            return biome;
+        }
+
+        try {
+            final Holder<Biome> fallbackBiome = fallbackSource.getNoiseBiome(biomeX, biomeY, biomeZ, sampler);
+            if (fallbackBiome != null && !this.dynamicPossibleBiomes.contains(fallbackBiome)) {
+                return fallbackBiome;
+            }
+        } catch (Throwable ignored) {
+            // Keep regular biome selection if fallback source cannot provide a biome at this point.
+        }
+
+        return biome;
+    }
+
+    private void setFallbackBiomeSource(BiomeSource source) {
+        if (source == this || source instanceof WoverBiomeSource) {
+            return;
+        }
+        this.fallbackBiomeSource = source;
+    }
+
 
     protected final void rebuildBiomes(boolean force) {
         if (!force && didCreatePickers) return;
@@ -177,6 +213,8 @@ public abstract class WoverBiomeSource extends BiomeSource implements
 
     @Override
     public WoverBiomeSource mergeWithBiomeSource(BiomeSource inputBiomeSource) {
+        setFallbackBiomeSource(inputBiomeSource);
+
         Stopwatch sw = Stopwatch.createStarted();
         RegistryAccess access = WorldState.registryAccess();
         if (access == null) {

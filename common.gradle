@@ -8,11 +8,11 @@ buildscript {
     }
 }
 
-version = project.mod_version
-group = project.maven_group
 def local_wunderlib = findProject(':wunderlib') != null
 def rootModId = project.findProperty('root_mod_id') ?: 'wover'
 def woverRootProject = rootProject.findProject(":WorldWeaver") ?: rootProject
+version = woverRootProject.mod_version
+group = woverRootProject.maven_group
 
 
 allprojects { projIt ->
@@ -36,8 +36,8 @@ allprojects { projIt ->
         maven { url 'https://maven.ambertation.de/releases' }
     }
 
-    version = rootProject.mod_version
-    group = rootProject.maven_group
+    version = woverRootProject.mod_version
+    group = woverRootProject.maven_group
 
 
     java {
