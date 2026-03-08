@@ -17,7 +17,7 @@ public class DedicatedServerPropertiesMixin {
     @ModifyArg(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/dedicated/DedicatedServerProperties$WorldDimensionData;<init>(Lcom/google/gson/JsonObject;Ljava/lang/String;)V"))
     protected String wover_defaultPreset(String string) {
         if (Configs.MAIN.forceDefaultWorldPresetOnServer.get()) {
-            return WorldPresetsManagerImpl.getDefault().location().toString();
+            return WorldPresetsManagerImpl.getDefault().identifier().toString();
         }
         return string;
     }
@@ -27,7 +27,7 @@ public class DedicatedServerPropertiesMixin {
         //init default value level preset in server.properties
         property.setProperty(
                 "level-type",
-                property.getProperty("level-type", WorldPresetsManagerImpl.getDefault().location().toString())
+                property.getProperty("level-type", WorldPresetsManagerImpl.getDefault().identifier().toString())
         );
         return property;
     }

@@ -7,7 +7,7 @@ import org.betterx.wover.surface.api.conditions.ConditionManager;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.levelgen.SurfaceRules;
 
 import net.neoforged.neoforge.registries.RegisterEvent;
@@ -32,7 +32,7 @@ public class MaterialConditionRegistryImpl {
     }
 
     @NotNull
-    public static ResourceKey<MapCodec<? extends SurfaceRules.ConditionSource>> createKey(ResourceLocation location) {
+    public static ResourceKey<MapCodec<? extends SurfaceRules.ConditionSource>> createKey(Identifier location) {
         return ResourceKey.create(
                 Registries.MATERIAL_CONDITION,
                 location
@@ -42,21 +42,21 @@ public class MaterialConditionRegistryImpl {
     @ApiStatus.Internal
     public static void register(RegisterEvent event) {
         event.register(Registries.MATERIAL_CONDITION, helper -> {
-            helper.register(THRESHOLD_CONDITION.location(), ThresholdConditionImpl.CODEC);
-            helper.register(VOLUME_THRESHOLD_CONDITION.location(), VolumeThresholdConditionImpl.CODEC);
-            helper.register(ROUGH_NOISE_CONDITION.location(), RoughNoiseConditionImpl.CODEC);
+            helper.register(THRESHOLD_CONDITION.identifier(), ThresholdConditionImpl.CODEC);
+            helper.register(VOLUME_THRESHOLD_CONDITION.identifier(), VolumeThresholdConditionImpl.CODEC);
+            helper.register(ROUGH_NOISE_CONDITION.identifier(), RoughNoiseConditionImpl.CODEC);
 
             if (LegacyHelper.isLegacyEnabled()) {
                 helper.register(
-                        LegacyHelper.BCLIB_CORE.convertNamespace(THRESHOLD_CONDITION.location()),
+                        LegacyHelper.BCLIB_CORE.convertNamespace(THRESHOLD_CONDITION.identifier()),
                         LegacyHelper.wrap(ThresholdConditionImpl.CODEC)
                 );
                 helper.register(
-                        LegacyHelper.BCLIB_CORE.convertNamespace(VOLUME_THRESHOLD_CONDITION.location()),
+                        LegacyHelper.BCLIB_CORE.convertNamespace(VOLUME_THRESHOLD_CONDITION.identifier()),
                         LegacyHelper.wrap(VolumeThresholdConditionImpl.CODEC)
                 );
                 helper.register(
-                        LegacyHelper.BCLIB_CORE.convertNamespace(ROUGH_NOISE_CONDITION.location()),
+                        LegacyHelper.BCLIB_CORE.convertNamespace(ROUGH_NOISE_CONDITION.identifier()),
                         LegacyHelper.wrap(RoughNoiseConditionImpl.CODEC)
                 );
             }

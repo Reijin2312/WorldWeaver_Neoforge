@@ -50,9 +50,11 @@ public final class NetherBiomesHelper {
     public static void syncParameterList(RegistryAccess access) {
         if (access == null) return;
         Registry<MultiNoiseBiomeSourceParameterList> registry
-                = access.registry(Registries.MULTI_NOISE_BIOME_SOURCE_PARAMETER_LIST).orElse(null);
+                = access.lookup(Registries.MULTI_NOISE_BIOME_SOURCE_PARAMETER_LIST).orElse(null);
         if (registry == null) return;
-        MultiNoiseBiomeSourceParameterList list = registry.get(MultiNoiseBiomeSourceParameterLists.NETHER);
+        MultiNoiseBiomeSourceParameterList list = registry.get(MultiNoiseBiomeSourceParameterLists.NETHER)
+                                                         .map(Holder.Reference::value)
+                                                         .orElse(null);
         if (!(list instanceof MultiNoiseBiomeSourceParameterListAccessor accessor)) return;
 
         List<Pair<Climate.ParameterPoint, Holder<Biome>>> updated = new ArrayList<>(accessor.wover_getParameters().values());
@@ -61,12 +63,12 @@ public final class NetherBiomesHelper {
             entry.getSecond().unwrapKey().ifPresent(existing::add);
         }
 
-        Registry<Biome> biomes = access.registry(Registries.BIOME).orElse(null);
+        Registry<Biome> biomes = access.lookup(Registries.BIOME).orElse(null);
         if (biomes == null) return;
         boolean changed = false;
         for (Pair<Climate.ParameterPoint, ResourceKey<Biome>> entry : getAdditions()) {
             if (!existing.contains(entry.getSecond())) {
-                boolean added = biomes.getHolder(entry.getSecond())
+                boolean added = biomes.get(entry.getSecond())
                                       .map(holder -> updated.add(Pair.of(entry.getFirst(), holder)))
                                       .orElse(false);
                 if (added) {

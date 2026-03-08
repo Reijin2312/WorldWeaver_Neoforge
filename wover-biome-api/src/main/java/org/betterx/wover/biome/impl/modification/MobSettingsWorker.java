@@ -1,7 +1,7 @@
 package org.betterx.wover.biome.impl.modification;
 
-import net.minecraft.util.random.WeightedRandomList;
-import net.minecraft.world.entity.Mob;
+import net.minecraft.util.random.Weighted;
+import net.minecraft.util.random.WeightedList;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.MobSpawnSettings;
@@ -18,7 +18,7 @@ public class MobSettingsWorker {
     private final MobSpawnSettings mobSettings;
     private final Biome biome;
 
-    private Map<MobCategory, WeightedRandomList<MobSpawnSettings.SpawnerData>> customSpawners;
+    private Map<MobCategory, WeightedList<MobSpawnSettings.SpawnerData>> customSpawners;
 
     public MobSettingsWorker(Biome biome) {
         this.biome = biome;
@@ -45,15 +45,17 @@ public class MobSettingsWorker {
         return res;
     }
 
-    public <M extends Mob> void addSpawns(List<MobSpawnSettings.SpawnerData> spawns) {
-        Map<MobCategory, List<MobSpawnSettings.SpawnerData>> input =
-                spawns.stream().collect(Collectors.groupingBy(s -> s.type.getCategory()));
+    public void addSpawns(List<Weighted<MobSpawnSettings.SpawnerData>> spawns) {
+        if (spawns == null || spawns.isEmpty()) return;
+
+        Map<MobCategory, List<Weighted<MobSpawnSettings.SpawnerData>>> input =
+                spawns.stream().collect(Collectors.groupingBy(s -> s.value().type().getCategory()));
         if (input.isEmpty()) return;
 
         unfreezeSpawners();
         for (MobCategory category : input.keySet()) {
-            final WeightedRandomList<MobSpawnSettings.SpawnerData> currentSpawns = customSpawners.get(category);
-            final List<MobSpawnSettings.SpawnerData> mutableSpawns;
+            final WeightedList<MobSpawnSettings.SpawnerData> currentSpawns = customSpawners.get(category);
+            final List<Weighted<MobSpawnSettings.SpawnerData>> mutableSpawns;
             if (currentSpawns == null) {
                 mutableSpawns = input.get(category);
             } else {
@@ -63,7 +65,7 @@ public class MobSettingsWorker {
                 mutableSpawns.addAll(tmpA);
                 mutableSpawns.addAll(tmpB);
             }
-            customSpawners.put(category, WeightedRandomList.create(mutableSpawns));
+            customSpawners.put(category, WeightedList.of(mutableSpawns));
         }
     }
 }

@@ -20,7 +20,7 @@ public interface RandomPatch extends FeatureConfigurator<RandomPatchConfiguratio
      * The feature that should be placed in the patch.
      *
      * @param featureToPlace The feature to place. A {@link PlacedFeatureKey} can be created using
-     *                       {@link org.betterx.wover.feature.api.placed.PlacedFeatureManager#createKey(net.minecraft.resources.ResourceLocation)}
+     *                       {@link org.betterx.wover.feature.api.placed.PlacedFeatureManager#createKey(net.minecraft.resources.Identifier)}
      * @return the same instance
      */
     <K extends BasePlacedFeatureKey<K>> RandomPatch featureToPlace(BasePlacedFeatureKey<K> featureToPlace);

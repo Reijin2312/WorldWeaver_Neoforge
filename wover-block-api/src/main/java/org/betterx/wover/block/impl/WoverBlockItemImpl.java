@@ -3,7 +3,7 @@ package org.betterx.wover.block.impl;
 import org.betterx.wover.item.api.ItemTagProvider;
 import org.betterx.wover.tag.api.event.context.ItemTagBootstrapContext;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.level.block.Block;
 
@@ -25,7 +25,7 @@ public class WoverBlockItemImpl extends BlockItem implements ItemTagProvider {
     }
 
     @Override
-    public void registerItemTags(ResourceLocation location, ItemTagBootstrapContext context) {
+    public void registerItemTags(Identifier location, ItemTagBootstrapContext context) {
         this.tagProvider.registerItemTags(location, context);
     }
 }

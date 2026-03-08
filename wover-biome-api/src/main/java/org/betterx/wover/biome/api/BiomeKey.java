@@ -13,7 +13,7 @@ import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.biome.Biome;
 
 import org.jetbrains.annotations.NotNull;
@@ -53,7 +53,7 @@ public abstract class BiomeKey<B extends BiomeBuilder<B>> {
     public Holder<Biome> getHolder(@Nullable RegistryAccess access) {
         return access == null
                 ? null
-                : access.registryOrThrow(Registries.BIOME).getHolder(this.key).orElse(null);
+                : access.lookupOrThrow(Registries.BIOME).get(this.key).orElse(null);
     }
 
     /**
@@ -87,7 +87,7 @@ public abstract class BiomeKey<B extends BiomeBuilder<B>> {
 
     public abstract B bootstrap(BiomeBootstrapContext context);
 
-    protected BiomeKey(@NotNull ResourceLocation location) {
+    protected BiomeKey(@NotNull Identifier location) {
         this.key = BiomeManagerImpl.createKey(location);
         this.dataKey = BiomeDataRegistry.createKey(location);
     }

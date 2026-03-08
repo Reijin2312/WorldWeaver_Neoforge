@@ -2,6 +2,7 @@ package org.betterx.wover.biome.impl.modification.predicates;
 
 import org.betterx.wover.biome.api.modification.predicates.BiomePredicate;
 
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.KeyDispatchDataCodec;
@@ -22,7 +23,7 @@ public record HasStructure(ResourceKey<Structure> key) implements BiomePredicate
 
     @Override
     public boolean test(Context ctx) {
-        final Structure instance = ctx.structures.get(key);
+        final Structure instance = ctx.structures.get(key).map(Holder.Reference::value).orElse(null);
         if (instance == null) return false;
 
         return instance.biomes().contains(ctx.biomeHolder);

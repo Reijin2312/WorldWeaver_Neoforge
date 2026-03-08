@@ -4,7 +4,7 @@ import org.betterx.wover.recipe.api.StonecutterRecipeBuilder;
 
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.data.recipes.SingleItemRecipeBuilder;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.crafting.Ingredient;
@@ -16,7 +16,7 @@ public class StonecutterRecipeBuilderImpl extends BaseRecipeBuilderImpl<Stonecut
     Ingredient input;
 
     public StonecutterRecipeBuilderImpl(
-            @NotNull ResourceLocation id,
+            @NotNull Identifier id,
             @NotNull ItemLike output
     ) {
         super(id, output);
@@ -24,7 +24,7 @@ public class StonecutterRecipeBuilderImpl extends BaseRecipeBuilderImpl<Stonecut
 
 
     public StonecutterRecipeBuilder input(TagKey<Item> input) {
-        return input(Ingredient.of(input));
+        return input(ingredientOf(input));
     }
 
     public StonecutterRecipeBuilder input(ItemLike input) {
@@ -33,7 +33,7 @@ public class StonecutterRecipeBuilderImpl extends BaseRecipeBuilderImpl<Stonecut
 
     public StonecutterRecipeBuilder input(Ingredient input) {
         this.input = input;
-        unlockedBy(input.getItems());
+        unlockedBy(input);
         return this;
     }
 
@@ -57,6 +57,6 @@ public class StonecutterRecipeBuilderImpl extends BaseRecipeBuilderImpl<Stonecut
         }
 
         builder.group(group);
-        builder.save(ctx, id);
+        builder.save(ctx, recipeKey(id));
     }
 }

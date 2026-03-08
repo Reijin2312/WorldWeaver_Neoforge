@@ -81,4 +81,3 @@ public class CreativeTabManagerImpl implements CreativeTabsBuilder, CreativeTabs
         }
     }
 }
-

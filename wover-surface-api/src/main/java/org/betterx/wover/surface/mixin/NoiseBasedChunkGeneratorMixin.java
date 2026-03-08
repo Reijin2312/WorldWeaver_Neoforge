@@ -4,8 +4,9 @@ import org.betterx.wover.common.surface.api.InjectableSurfaceRules;
 import org.betterx.wover.surface.impl.SurfaceRuleUtil;
 
 import net.minecraft.core.Holder;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
@@ -19,11 +20,14 @@ public abstract class NoiseBasedChunkGeneratorMixin implements InjectableSurface
     @Shadow
     public abstract Holder<NoiseGeneratorSettings> generatorSettings();
 
-    public void wover_injectSurfaceRules(Registry<LevelStem> dimensionRegistry, ResourceKey<LevelStem> dimensionKey) {
+    @Override
+    public void wover_injectSurfaceRules(Object dimensionRegistry, String dimensionKey) {
         ChunkGenerator self = (ChunkGenerator) (Object) this;
+        if (dimensionKey == null) return;
+        ResourceKey<LevelStem> key = ResourceKey.create(Registries.LEVEL_STEM, Identifier.parse(dimensionKey));
 
         SurfaceRuleUtil.injectNoiseBasedSurfaceRules(
-                dimensionKey,
+                key,
                 generatorSettings(),
                 self.getBiomeSource()
         );

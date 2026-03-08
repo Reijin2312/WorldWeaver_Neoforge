@@ -4,6 +4,7 @@ import org.betterx.wover.core.api.registry.OnElementLoad;
 import org.betterx.wover.util.PriorityLinkedList;
 
 import net.minecraft.core.Registry;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 
 import java.util.HashMap;
@@ -51,6 +52,53 @@ public class DatapackLoadElementImpl {
         if (isRegistered(elementKey.registryKey())) {
             getWatchers(elementKey.registryKey())
                     .forEach(watcher -> watcher.didLoadFromDatapack(elementKey, element));
+        }
+    }
+
+    /**
+     * Classloader-safe variant used from mixin-injected code inside Minecraft classes.
+     * It avoids directly linking Minecraft classes in the caller's classloader.
+     */
+    @ApiStatus.Internal
+    public static void didLoadFromDatapackRaw(
+            Object elementKey,
+            Object element
+    ) {
+        if (elementKey == null || element == null) return;
+
+        try {
+            final ResourceKey<?> resourceKey = toLocalResourceKey(elementKey);
+            final PriorityLinkedList<OnElementLoad> watchers = WATCHERS.get(resourceKey.registryKey());
+            if (watchers == null) return;
+
+            watchers.forEach(watcher -> invokeWatcher(watcher, resourceKey, element));
+        } catch (Exception ex) {
+            throw new RuntimeException("Failed to dispatch datapack load callback", ex);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static ResourceKey<?> toLocalResourceKey(Object rawKey) throws ReflectiveOperationException {
+        if (rawKey instanceof ResourceKey<?> localKey) {
+            return localKey;
+        }
+
+        Object rawRegistryKey = rawKey.getClass().getMethod("registryKey").invoke(rawKey);
+        Object rawRegistryId = rawRegistryKey.getClass().getMethod("identifier").invoke(rawRegistryKey);
+        Object rawElementId = rawKey.getClass().getMethod("identifier").invoke(rawKey);
+
+        ResourceKey<Registry<Object>> localRegistryKey = ResourceKey.createRegistryKey(Identifier.parse(rawRegistryId.toString()));
+        return ResourceKey.create(localRegistryKey, Identifier.parse(rawElementId.toString()));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void invokeWatcher(OnElementLoad watcher, ResourceKey<?> elementKey, Object element) {
+        if (watcher == null) return;
+
+        try {
+            watcher.didLoadFromDatapack((ResourceKey) elementKey, element);
+        } catch (RuntimeException ex) {
+            throw new RuntimeException("Failed to invoke datapack load watcher " + watcher.getClass().getName(), ex);
         }
     }
 }

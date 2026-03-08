@@ -2,7 +2,7 @@ package org.betterx.wover.block.api;
 
 import org.betterx.wover.tag.api.event.context.TagBootstrapContext;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Block;
 
 /**
@@ -16,5 +16,5 @@ public interface BlockTagProvider {
      * @param location The location of the block as it was registered with then BlockRegistry
      * @param context  The context to add tags to
      */
-    void registerBlockTags(ResourceLocation location, TagBootstrapContext<Block> context);
+    void registerBlockTags(Identifier location, TagBootstrapContext<Block> context);
 }

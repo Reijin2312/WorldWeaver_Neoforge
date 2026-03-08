@@ -14,7 +14,6 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.Tool;
@@ -108,7 +107,7 @@ public class TagManager {
      * {@code directory} is built using Minecrafts
      * {@link net.minecraft.core.registries.Registries#tagsDirPath(ResourceKey)}, while {@code locationProvider}
      * will lookup the Registry using {@link WorldState#registryAccess()} and determin the
-     * {@link net.minecraft.resources.ResourceLocation} using {@link Registry#getKey(Object)}.
+     * {@link net.minecraft.resources.Identifier} using {@link Registry#getKey(Object)}.
      *
      * @param registry The registry to create the {@link TagRegistry} for.
      * @return The created {@link TagRegistry}.
@@ -138,17 +137,14 @@ public class TagManager {
      * @return {@code true} if the ItemStack is a tool with the given mineable tag, {@code false} otherwise.
      */
     public static boolean isToolWithMineableTag(ItemStack stack, TagKey<Block> tag) {
-        if (stack.getItem() instanceof DiggerItem dig) {
-            Tool tool = dig.components().get(DataComponents.TOOL);
-            if (tool != null) {
-                for (var rule : tool.rules()) {
-                    if (
-                            rule.correctForDrops().orElse(false)
-                                    && rule.blocks().unwrapKey().map(key -> key == tag).orElse(false)
-                    ) {
-                        return true;
-                    }
-                }
+        Tool tool = stack.get(DataComponents.TOOL);
+        if (tool == null) return false;
+        for (var rule : tool.rules()) {
+            if (
+                    rule.correctForDrops().orElse(false)
+                            && rule.blocks().unwrapKey().map(key -> key == tag).orElse(false)
+            ) {
+                return true;
             }
         }
         return false;

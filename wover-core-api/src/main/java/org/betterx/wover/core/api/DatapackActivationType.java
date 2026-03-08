@@ -2,8 +2,6 @@ package org.betterx.wover.core.api;
 
 import net.minecraft.server.packs.repository.PackSource;
 
-import java.util.function.UnaryOperator;
-import net.minecraft.network.chat.Component;
 
 public enum DatapackActivationType {
     NORMAL(PackSource.create(PackSource.BUILT_IN::decorate, false), false),

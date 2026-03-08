@@ -11,10 +11,10 @@ import org.betterx.wover.events.impl.EventImpl;
 import org.betterx.wover.legacy.api.LegacyHelper;
 import org.betterx.wover.util.Pair;
 
-import net.minecraft.Util;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
+import net.minecraft.util.Util;
 import net.minecraft.world.level.storage.LevelResource;
 import net.minecraft.world.level.storage.LevelStorageSource;
 
@@ -132,7 +132,12 @@ public class WorldConfigImpl {
         CompoundTag tag = getRootTag(modCore);
         for (String part : parts) {
             if (tag.contains(part)) {
-                tag = tag.getCompound(part);
+                CompoundTag child = tag.getCompound(part).orElse(null);
+                if (child == null) {
+                    child = new CompoundTag();
+                    tag.put(part, child);
+                }
+                tag = child;
             } else {
                 CompoundTag t = new CompoundTag();
                 tag.put(part, t);
@@ -173,7 +178,7 @@ public class WorldConfigImpl {
      * @return The Version object
      */
     public static Version getModifiedVersion(ModCore modCore) {
-        return new Version(getRootTag(modCore).getString(TAG_MODIFIED));
+        return new Version(getRootTag(modCore).getStringOr(TAG_MODIFIED, ""));
     }
 
     /**
@@ -183,7 +188,6 @@ public class WorldConfigImpl {
      * @return The Version object
      */
     public static Version getCreatedVersion(ModCore modCore) {
-        return new Version(getRootTag(modCore).getString(TAG_CREATED));
+        return new Version(getRootTag(modCore).getStringOr(TAG_CREATED, ""));
     }
 }
-

@@ -4,7 +4,7 @@ import org.betterx.wover.structure.impl.StructureManagerImpl;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.ServerLevelAccessor;
@@ -25,7 +25,7 @@ public class RandomNbtStructurePiece extends TemplateStructurePiece {
 
     public RandomNbtStructurePiece(
             StructureTemplateManager manager,
-            ResourceLocation nbtLocation,
+            Identifier nbtLocation,
             StructurePlaceSettings placeSettings,
             BlockPos templatePosition,
             boolean keepAir
@@ -41,7 +41,7 @@ public class RandomNbtStructurePiece extends TemplateStructurePiece {
     public RandomNbtStructurePiece(StructurePieceSerializationContext context, CompoundTag compoundTag) {
         this(
                 context, compoundTag,
-                compoundTag.contains("A") && compoundTag.getBoolean("A")
+                compoundTag.getBooleanOr("A", false)
         );
 
     }
@@ -63,9 +63,13 @@ public class RandomNbtStructurePiece extends TemplateStructurePiece {
 
     private static StructurePlaceSettings fromNbt(CompoundTag compoundTag, boolean keepAir) {
         return settings(
-                Rotation.valueOf(compoundTag.getString("R")),
-                Mirror.valueOf(compoundTag.getString("M")),
-                new BlockPos(compoundTag.getInt("RX"), compoundTag.getInt("RY"), compoundTag.getInt("RZ")),
+                Rotation.valueOf(compoundTag.getString("R").orElse("")),
+                Mirror.valueOf(compoundTag.getString("M").orElse("")),
+                new BlockPos(
+                        compoundTag.getIntOr("RX", 0),
+                        compoundTag.getIntOr("RY", 0),
+                        compoundTag.getIntOr("RZ", 0)
+                ),
                 keepAir
         );
 

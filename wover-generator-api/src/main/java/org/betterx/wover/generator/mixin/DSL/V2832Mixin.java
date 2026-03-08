@@ -1,6 +1,5 @@
 package org.betterx.wover.generator.mixin.DSL;
 
-import org.betterx.wover.generator.impl.chunkgenerator.ChunkGeneratorManagerImpl;
 
 import com.mojang.datafixers.types.templates.TypeTemplate;
 import net.minecraft.util.datafix.schemas.V2832;

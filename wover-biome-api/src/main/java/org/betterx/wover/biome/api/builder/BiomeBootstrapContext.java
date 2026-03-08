@@ -15,6 +15,6 @@ public interface BiomeBootstrapContext extends LookupProvider {
     default void register(@NotNull BiomeBuilder<?> builder) {
         this.register(builder, Lifecycle.stable());
     }
-    
+
     <S> HolderGetter<S> lookup(@NotNull ResourceKey<? extends Registry<? extends S>> registryKey);
 }

@@ -49,4 +49,3 @@ public class Triple<A, B, C> extends Pair<A, B> {
         return Objects.hash(super.hashCode(), third);
     }
 }
-

@@ -14,7 +14,7 @@ import net.minecraft.core.*;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.StructureType;
 import net.minecraft.world.level.levelgen.structure.pieces.StructurePieceType;
@@ -123,7 +123,7 @@ public class StructureManagerImpl {
     }
 
     public static <S extends Structure> @NotNull StructureTypeKey<S> registerType(
-            @NotNull ResourceLocation location,
+            @NotNull Identifier location,
             @NotNull StructureTypeKey.StructureFactory<S> structureFactory,
             @NotNull MapCodec<S> codec
     ) {
@@ -137,7 +137,7 @@ public class StructureManagerImpl {
     }
 
     public static <S extends Structure> @NotNull StructureType<S> registerType(
-            @NotNull ResourceLocation location,
+            @NotNull Identifier location,
             @NotNull MapCodec<S> codec
     ) {
         final ResourceKey<StructureType<?>> key = ResourceKey.create(Registries.STRUCTURE_TYPE, location);
@@ -150,7 +150,7 @@ public class StructureManagerImpl {
     }
 
     public static @NotNull StructurePieceType registerPiece(
-            @NotNull ResourceLocation location,
+            @NotNull Identifier location,
             @NotNull StructurePieceType pieceType
     ) {
         final ResourceKey<StructurePieceType> key = ResourceKey.create(Registries.STRUCTURE_PIECE, location);
@@ -160,9 +160,9 @@ public class StructureManagerImpl {
 
     public static void register(RegisterEvent event) {
         if (event.getRegistryKey().equals(Registries.STRUCTURE_TYPE)) {
-            event.register(Registries.STRUCTURE_TYPE, helper -> TYPES.forEach((k, v) -> helper.register(k.location(), v)));
+            event.register(Registries.STRUCTURE_TYPE, helper -> TYPES.forEach((k, v) -> helper.register(k.identifier(), v)));
         } else if (event.getRegistryKey().equals(Registries.STRUCTURE_PIECE)) {
-            event.register(Registries.STRUCTURE_PIECE, helper -> PIECES.forEach((k, v) -> helper.register(k.location(), v)));
+            event.register(Registries.STRUCTURE_PIECE, helper -> PIECES.forEach((k, v) -> helper.register(k.identifier(), v)));
         }
     }
 }

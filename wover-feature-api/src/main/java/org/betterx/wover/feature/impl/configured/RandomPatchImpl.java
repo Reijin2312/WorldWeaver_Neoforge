@@ -7,7 +7,7 @@ import org.betterx.wover.feature.api.placed.BasePlacedFeatureKey;
 import net.minecraft.core.Holder;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.RandomPatchFeature;
@@ -88,7 +88,7 @@ public class RandomPatchImpl extends FeatureConfiguratorImpl<RandomPatchConfigur
     }
 
     public static class Key extends ConfiguredFeatureKey<RandomPatch> {
-        public Key(ResourceLocation id) {
+        public Key(Identifier id) {
             super(id);
         }
 

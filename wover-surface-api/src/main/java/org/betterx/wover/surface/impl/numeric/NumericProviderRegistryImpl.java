@@ -24,7 +24,7 @@ public class NumericProviderRegistryImpl {
         NumericProviderRegistry.register(key, codec);
         if (LegacyHelper.isLegacyEnabled()) {
             NumericProviderRegistry.register(
-                    LegacyHelper.BCLIB_CORE.convertNamespace(key.location()),
+                    LegacyHelper.BCLIB_CORE.convertNamespace(key.identifier()),
                     LegacyHelper.wrap(codec)
             );
         }

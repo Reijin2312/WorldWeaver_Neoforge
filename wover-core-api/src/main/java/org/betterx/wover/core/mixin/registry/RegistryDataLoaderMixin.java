@@ -1,7 +1,6 @@
 package org.betterx.wover.core.mixin.registry;
 
 import org.betterx.wover.core.impl.registry.DatapackRegistryBuilderImpl;
-import org.betterx.wover.entrypoint.LibWoverCore;
 
 import com.mojang.serialization.Decoder;
 import net.minecraft.core.WritableRegistry;
@@ -30,7 +29,7 @@ public class RegistryDataLoaderMixin {
 
     @Inject(method = "<clinit>", at = @At("TAIL"))
     private static void wover_init(CallbackInfo ci) {
-        LibWoverCore.C.log.debug("Skipping WORLDGEN_REGISTRIES injection; DataPackRegistryEvent handles custom registries.");
+        // Intentionally no-op: avoid referencing split module classes from injected MC code in datagen/dev.
     }
 
     @Inject(method = "loadContentsFromManager", at = @At("TAIL"))

@@ -12,7 +12,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.levelgen.presets.WorldPreset;
 
 import java.util.Optional;
@@ -29,7 +29,7 @@ public class WorldPresetInfoRegistry {
             DatapackRegistryBuilder.createRegistryKey(LibWoverWorldPreset.C.id("wover/world_preset_info"));
 
     public static ResourceKey<WorldPresetInfo> createKey(
-            ResourceLocation ruleID
+            Identifier ruleID
     ) {
         return WorldPresetInfoRegistryImpl.createKey(ruleID);
     }
@@ -37,7 +37,7 @@ public class WorldPresetInfoRegistry {
     public static ResourceKey<WorldPresetInfo> createKey(
             ResourceKey<WorldPreset> ruleID
     ) {
-        return createKey(ruleID.location());
+        return createKey(ruleID.identifier());
     }
 
     public static @NotNull WorldPresetInfo getFor(
@@ -45,14 +45,15 @@ public class WorldPresetInfoRegistry {
     ) {
         if (key == null) return WorldPresetInfoImpl.DEFAULT;
         final Registry<WorldPresetInfo> infos = WorldState.allStageRegistryAccess()
-                                                          .registry(WORLD_PRESET_INFO_REGISTRY)
+                                                          .lookup(WORLD_PRESET_INFO_REGISTRY)
                                                           .orElse(null);
         if (infos == null) {
             LibWoverWorldPreset.C.LOG.error("WorldPresetInfoRegistry: Registry not read");
             return WorldPresetInfoImpl.DEFAULT;
         }
-        if (!infos.containsKey(key.location())) return WorldPresetInfoImpl.DEFAULT;
-        return infos.get(key.location());
+        return infos.get(key.identifier())
+                    .map(Holder.Reference::value)
+                    .orElse(WorldPresetInfoImpl.DEFAULT);
     }
 
     public static @NotNull WorldPresetInfo getFor(
@@ -68,7 +69,7 @@ public class WorldPresetInfoRegistry {
         if (preset == null) return WorldPresetInfoImpl.DEFAULT;
 
         final Registry<WorldPreset> presets = WorldState.allStageRegistryAccess()
-                                                        .registryOrThrow(Registries.WORLD_PRESET);
+                                                        .lookupOrThrow(Registries.WORLD_PRESET);
         final Optional<ResourceKey<WorldPreset>> key = presets.getResourceKey(preset);
         if (key.isPresent()) return getFor(key.get());
         return WorldPresetInfoImpl.DEFAULT;

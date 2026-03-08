@@ -15,7 +15,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.biome.Biome;
 
 import java.util.*;
@@ -33,7 +33,7 @@ public class WoverBiomeSourceImpl {
         var namespaces = biomes
                 .stream()
                 .filter(h -> h.unwrapKey().isPresent())
-                .map(h -> h.unwrapKey().get().location().getNamespace())
+                .map(h -> h.unwrapKey().get().identifier().getNamespace())
                 .toList();
 
         return namespaces
@@ -66,21 +66,21 @@ public class WoverBiomeSourceImpl {
 
         final Set<Holder<Biome>> allBiomes = new HashSet<>();
         final Set<ResourceKey<Biome>> addedBiomes = new HashSet<>();
-        final Registry<Biome> biomes = access.registryOrThrow(Registries.BIOME);
-        final Registry<BiomeData> biomeData = access.registry(BiomeDataRegistry.BIOME_DATA_REGISTRY).orElse(null);
+        final Registry<Biome> biomes = access.lookupOrThrow(Registries.BIOME);
+        final Registry<BiomeData> biomeData = access.lookup(BiomeDataRegistry.BIOME_DATA_REGISTRY).orElse(null);
 
         for (WoverBiomeSource.TagToPicker mapper : pickers) {
-            final Optional<HolderSet.Named<Biome>> optionalTag = biomes.getTag(mapper.tag());
+            final Optional<HolderSet.Named<Biome>> optionalTag = biomes.get(mapper.tag());
             if (optionalTag.isPresent()) {
                 final HolderSet.Named<Biome> tag = optionalTag.get();
-                final Set<ResourceLocation> excluded = BiomeSourceManagerImpl.getExcludedBiomes(tag.key());
+                final Set<Identifier> excluded = BiomeSourceManagerImpl.getExcludedBiomes(tag.key());
 
                 tag.stream()
                    .filter(holder -> holder.unwrapKey().isPresent())
                    .map(holder -> new Pair<>(holder, holder.unwrapKey().get()))
                    .filter(pair -> !addedBiomes.contains(pair.second))
-                   .filter(pair -> !excluded.contains(pair.second.location()))
-                   .sorted(Comparator.comparing(pair -> pair.second.location().toString()))
+                   .filter(pair -> !excluded.contains(pair.second.identifier()))
+                   .sorted(Comparator.comparing(pair -> pair.second.identifier().toString()))
                    .forEach(pair -> {
                        final boolean isPossible;
                        final BiomeData data = BiomeDataRegistryImpl.getFromRegistryOrTemp(

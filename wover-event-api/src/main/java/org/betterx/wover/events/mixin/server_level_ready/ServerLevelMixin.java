@@ -5,7 +5,6 @@ import org.betterx.wover.events.impl.WorldLifecycleImpl;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.progress.ChunkProgressListener;
 import net.minecraft.world.RandomSequences;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.LevelStem;
@@ -30,7 +29,6 @@ public class ServerLevelMixin {
             ServerLevelData serverLevelData,
             ResourceKey<Level> resourceKey,
             LevelStem levelStem,
-            ChunkProgressListener chunkProgressListener,
             boolean bl,
             long seed,
             List list,

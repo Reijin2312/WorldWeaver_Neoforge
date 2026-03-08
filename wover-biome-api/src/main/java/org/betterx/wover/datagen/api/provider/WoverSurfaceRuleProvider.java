@@ -6,7 +6,7 @@ import org.betterx.wover.surface.api.AssignedSurfaceRule;
 import org.betterx.wover.surface.api.SurfaceRuleRegistry;
 
 import net.minecraft.data.worldgen.BootstrapContext;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -34,7 +34,7 @@ public abstract class WoverSurfaceRuleProvider extends WoverRegistryContentProvi
      */
     public WoverSurfaceRuleProvider(
             @NotNull ModCore modCore,
-            @NotNull ResourceLocation providerId
+            @NotNull Identifier providerId
     ) {
         super(modCore, providerId.toString() + " (Surface Rules)", SurfaceRuleRegistry.SURFACE_RULES_REGISTRY);
     }
@@ -47,4 +47,3 @@ public abstract class WoverSurfaceRuleProvider extends WoverRegistryContentProvi
     @Override
     protected abstract void bootstrap(BootstrapContext<AssignedSurfaceRule> context);
 }
-

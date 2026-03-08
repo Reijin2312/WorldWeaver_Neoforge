@@ -10,6 +10,7 @@ import org.betterx.wover.state.api.WorldState;
 import com.mojang.datafixers.util.*;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceKey;
@@ -54,8 +55,8 @@ public class WoverBiomeData extends BiomeData {
         this.edge = edge;
         this.parent = parent;
 
-        this.edgeData = edge == null ? null : BiomeDataRegistry.createKey(edge.location());
-        this.parentData = parent == null ? null : BiomeDataRegistry.createKey(parent.location());
+        this.edgeData = edge == null ? null : BiomeDataRegistry.createKey(edge.identifier());
+        this.parentData = parent == null ? null : BiomeDataRegistry.createKey(parent.identifier());
     }
 
     public static WoverBiomeData of(ResourceKey<Biome> biome) {
@@ -211,7 +212,7 @@ public class WoverBiomeData extends BiomeData {
                 LibWoverBiome.C.log.verboseWarning("Accessing " + forWhat + " of " + ofBiome + " before registry is ready!");
             acc = allStage;
         }
-        return acc.registry(BiomeDataRegistry.BIOME_DATA_REGISTRY).orElse(null);
+        return acc.lookup(BiomeDataRegistry.BIOME_DATA_REGISTRY).orElse(null);
     }
 
     public static @NotNull Registry<BiomeData> getDataRegistry(
@@ -265,14 +266,14 @@ public class WoverBiomeData extends BiomeData {
         if (edgeData == null) return null;
         final Registry<BiomeData> reg = tryGetDataRegistry("edge biome", biomeKey);
         if (reg == null) return null;
-        return reg.get(edgeData);
+        return reg.get(edgeData).map(Holder.Reference::value).orElse(null);
     }
 
     public BiomeData getParentData() {
         if (parentData == null) return null;
         final Registry<BiomeData> reg = tryGetDataRegistry("parent biome", biomeKey);
         if (reg == null) return null;
-        return reg.get(parentData);
+        return reg.get(parentData).map(Holder.Reference::value).orElse(null);
     }
 
     public KeyDispatchDataCodec<? extends WoverBiomeData> codec() {

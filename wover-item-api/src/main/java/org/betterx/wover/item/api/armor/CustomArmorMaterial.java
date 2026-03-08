@@ -1,49 +1,62 @@
 package org.betterx.wover.item.api.armor;
 
-import org.betterx.wover.core.api.registry.BuiltInRegistryManager;
+import org.betterx.wover.tag.api.TagManager;
+import org.betterx.wover.tag.api.event.context.ItemTagBootstrapContext;
 
 import net.minecraft.core.Holder;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.world.item.ArmorItem;
-import net.minecraft.world.item.ArmorMaterial;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.equipment.ArmorMaterial;
+import net.minecraft.world.item.equipment.ArmorType;
+import net.minecraft.world.item.equipment.EquipmentAsset;
+import net.minecraft.world.item.equipment.EquipmentAssets;
 import net.minecraft.world.item.crafting.Ingredient;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.function.Supplier;
 
 public class CustomArmorMaterial {
-    public static CustomArmorMaterial.Builder start(ResourceLocation location) {
+    private static final List<RepairTagEntry> REPAIR_TAGS = new ArrayList<>();
+
+    static {
+        TagManager.ITEMS.bootstrapEvent().subscribe(CustomArmorMaterial::bootstrapRepairTags);
+    }
+
+    public static CustomArmorMaterial.Builder start(Identifier location) {
         return new CustomArmorMaterial.Builder(location);
     }
 
     public static class Builder {
-        private final ResourceLocation location;
-        private final EnumMap<ArmorItem.Type, Integer> defense;
+        private final Identifier location;
+        private final EnumMap<ArmorType, Integer> defense;
         private int enchantmentValue;
         private Holder<SoundEvent> equipSound;
         private float toughness;
         private float knockbackResistance;
+        private int durability = 15;
+        private TagKey<Item> repairIngredientTag;
         private Supplier<Ingredient> repairIngredientSupplier;
-        List<ArmorMaterial.Layer> layers;
 
-        private Builder(ResourceLocation location) {
+        private Builder(Identifier location) {
             this.location = location;
-            this.defense = new EnumMap<>(ArmorItem.Type.class);
+            this.defense = new EnumMap<>(ArmorType.class);
         }
 
         public Builder defense(int boots, int leggings, int chestplate, int helmet, int body) {
-            defense(ArmorItem.Type.BOOTS, boots);
-            defense(ArmorItem.Type.LEGGINGS, leggings);
-            defense(ArmorItem.Type.CHESTPLATE, chestplate);
-            defense(ArmorItem.Type.HELMET, helmet);
-            defense(ArmorItem.Type.BODY, body);
+            defense(ArmorType.BOOTS, boots);
+            defense(ArmorType.LEGGINGS, leggings);
+            defense(ArmorType.CHESTPLATE, chestplate);
+            defense(ArmorType.HELMET, helmet);
+            defense(ArmorType.BODY, body);
             return this;
         }
 
-        public Builder defense(ArmorItem.Type type, int defense) {
+        public Builder defense(ArmorType type, int defense) {
             this.defense.put(type, defense);
             return this;
         }
@@ -68,18 +81,23 @@ public class CustomArmorMaterial {
             return this;
         }
 
+        public Builder durability(int durability) {
+            this.durability = durability;
+            return this;
+        }
+
+        public Builder repairIngredientTag(TagKey<Item> repairIngredientTag) {
+            this.repairIngredientTag = repairIngredientTag;
+            return this;
+        }
+
         public Builder repairIngredientSupplier(Supplier<Ingredient> repairIngredientSupplier) {
             this.repairIngredientSupplier = repairIngredientSupplier;
             return this;
         }
 
-        public Builder layers(List<ArmorMaterial.Layer> layers) {
-            this.layers = layers;
-            return this;
-        }
-
         protected void validate() throws IllegalStateException {
-            if (defense.size() != ArmorItem.Type.values().length) {
+            if (defense.size() != ArmorType.values().length) {
                 throw new IllegalStateException("Defense values must be set for all armor types");
             }
 
@@ -99,29 +117,66 @@ public class CustomArmorMaterial {
                 throw new IllegalStateException("Knockback resistance must be non-negative");
             }
 
-            if (repairIngredientSupplier == null) {
+            if (durability <= 0) {
+                throw new IllegalStateException("Durability must be positive");
+            }
+
+            if (repairIngredientTag == null && repairIngredientSupplier == null) {
                 throw new IllegalStateException("Repair ingredient supplier must be set");
             }
         }
 
         public ArmorMaterial build() {
-            if (layers == null) {
-                layers = List.of(new ArmorMaterial.Layer(location));
-            }
             validate();
+            TagKey<Item> repairTag = resolveRepairTag();
+            ResourceKey<EquipmentAsset> assetId = ResourceKey.create(EquipmentAssets.ROOT_ID, location);
             return new ArmorMaterial(
-                    defense, enchantmentValue, equipSound,
-                    repairIngredientSupplier, layers, toughness,
-                    knockbackResistance
+                    durability,
+                    defense,
+                    enchantmentValue,
+                    equipSound,
+                    toughness,
+                    knockbackResistance,
+                    repairTag,
+                    assetId
             );
         }
 
         public Holder<ArmorMaterial> buildAndRegister() {
-            return BuiltInRegistryManager.registerForHolder(
-                    BuiltInRegistries.ARMOR_MATERIAL,
-                    location,
-                    this.build()
-            );
+            return Holder.direct(this.build());
+        }
+
+        private TagKey<Item> resolveRepairTag() {
+            if (repairIngredientTag != null) return repairIngredientTag;
+            Identifier tagId = Identifier.fromNamespaceAndPath(location.getNamespace(), "repair/" + location.getPath());
+            TagKey<Item> tag = TagManager.ITEMS.makeTag(tagId);
+            REPAIR_TAGS.add(new RepairTagEntry(tag, repairIngredientSupplier));
+            return tag;
+        }
+    }
+
+    private static void bootstrapRepairTags(ItemTagBootstrapContext ctx) {
+        for (RepairTagEntry entry : REPAIR_TAGS) {
+            entry.addTo(ctx);
+        }
+    }
+
+    private static final class RepairTagEntry {
+        private final TagKey<Item> tag;
+        private final Supplier<Ingredient> supplier;
+
+        private RepairTagEntry(TagKey<Item> tag, Supplier<Ingredient> supplier) {
+            this.tag = tag;
+            this.supplier = supplier;
+        }
+
+        private void addTo(ItemTagBootstrapContext ctx) {
+            if (supplier == null) return;
+            Ingredient ingredient = supplier.get();
+            if (ingredient == null) return;
+            ingredient.items()
+                      .map(holder -> holder.value())
+                      .forEach(item -> ctx.add(tag, item));
         }
     }
 }

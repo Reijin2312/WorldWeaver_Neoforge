@@ -9,24 +9,28 @@ import org.betterx.wover.datagen.api.WoverDataProvider;
 
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.client.data.models.ItemModelGenerators;
+import net.minecraft.client.data.models.ItemModelOutput;
+import net.minecraft.client.data.models.blockstates.BlockModelDefinitionGenerator;
+import net.minecraft.client.data.models.model.DelegatedModel;
+import net.minecraft.client.data.models.model.ItemModelUtils;
+import net.minecraft.client.data.models.model.ModelInstance;
+import net.minecraft.client.data.models.model.ModelLocationUtils;
+import net.minecraft.client.renderer.block.model.BlockModelDefinition;
+import net.minecraft.client.renderer.item.ClientItem;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataProvider;
 import net.minecraft.data.PackOutput;
-import net.minecraft.data.models.ItemModelGenerators;
 import org.betterx.wover.block.api.model.WoverBlockModelGeneratorsAccess;
-import net.minecraft.data.models.blockstates.BlockStateGenerator;
-import net.minecraft.data.models.model.DelegatedModel;
-import net.minecraft.data.models.model.ModelLocationUtils;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.PackType;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
-import net.neoforged.neoforge.common.data.ExistingFileHelper;
-
 import com.google.common.collect.Maps;
 import com.google.gson.JsonElement;
+import com.mojang.serialization.JsonOps;
 
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -149,60 +153,93 @@ public abstract class WoverModelProvider implements WoverDataProvider<DataProvid
     @Override
     public DataProvider getProvider(
             PackOutput output,
-            CompletableFuture<HolderLookup.Provider> registriesFuture,
-            ExistingFileHelper existingFileHelper
+            CompletableFuture<HolderLookup.Provider> registriesFuture
     ) {
         return new DataProvider() {
             private final PackOutput.PathProvider blockStatePathProvider =
                     output.createPathProvider(PackOutput.Target.RESOURCE_PACK, "blockstates");
+            private final PackOutput.PathProvider itemInfoPathProvider =
+                    output.createPathProvider(PackOutput.Target.RESOURCE_PACK, "items");
             private final PackOutput.PathProvider modelPathProvider =
                     output.createPathProvider(PackOutput.Target.RESOURCE_PACK, "models");
 
             @Override
             public CompletableFuture<?> run(CachedOutput cache) {
-                Map<Block, BlockStateGenerator> blockStates = Maps.newHashMap();
-                Consumer<BlockStateGenerator> blockStateConsumer = generator -> {
-                    Block block = generator.getBlock();
+                Map<Block, BlockModelDefinitionGenerator> blockStates = Maps.newHashMap();
+                Consumer<BlockModelDefinitionGenerator> blockStateConsumer = generator -> {
+                    Block block = generator.block();
                     if (blockStates.put(block, generator) != null) {
                         throw new IllegalStateException("Duplicate blockstate definition for " + block);
                     }
                 };
 
-                Map<ResourceLocation, Supplier<JsonElement>> models = new HashMap<>();
-                BiConsumer<ResourceLocation, Supplier<JsonElement>> modelOutput = (id, supplier) -> {
+                Map<Identifier, ModelInstance> models = new HashMap<>();
+                BiConsumer<Identifier, ModelInstance> modelOutput = (id, supplier) -> {
                     if (models.put(id, supplier) != null) {
                         throw new IllegalStateException("Duplicate model definition for " + id);
                     }
                 };
 
                 Set<Item> skippedItems = new HashSet<>();
-                Consumer<Item> itemConsumer = skippedItems::add;
+                Map<Item, ClientItem> itemInfos = new HashMap<>();
+                Map<Item, Item> copiedItemInfos = new HashMap<>();
+                Map<Identifier, ClientItem> namedItemInfos = new HashMap<>();
+                ItemModelOutput itemModelOutput = new ItemModelOutput() {
+                    @Override
+                    public void accept(Item item, net.minecraft.client.renderer.item.ItemModel.Unbaked model, ClientItem.Properties properties) {
+                        ClientItem prev = itemInfos.put(item, new ClientItem(model, properties));
+                        if (prev != null) {
+                            throw new IllegalStateException("Duplicate item model definition for " + item);
+                        }
+                    }
+
+                    @Override
+                    public void copy(Item target, Item source) {
+                        copiedItemInfos.put(target, source);
+                    }
+
+                    @Override
+                    public void register(Identifier identifier, ClientItem clientItem) {
+                        ClientItem prev = namedItemInfos.put(identifier, clientItem);
+                        if (prev != null) {
+                            throw new IllegalStateException("Duplicate item model definition for " + identifier);
+                        }
+                    }
+                };
 
                 WoverBlockModelGeneratorsAccess blockModelGenerators = new WoverBlockModelGeneratorsAccess(
-                        blockStateConsumer, modelOutput, itemConsumer
+                        blockStateConsumer, itemModelOutput, modelOutput, skippedItems
                 );
                 bootstrapBlockStateModels(new WoverBlockModelGenerators(blockModelGenerators));
 
-                ItemModelGenerators itemModelGenerators = new ItemModelGenerators(modelOutput);
+                ItemModelGenerators itemModelGenerators = new ItemModelGenerators(itemModelOutput, modelOutput);
                 bootstrapItemModels(itemModelGenerators);
 
                 validateBlockStates(blockStates);
-                addItemModelDelegates(models, skippedItems, existingFileHelper);
+                addItemModelDelegates(models, skippedItems);
+                finalizeItemModels(itemInfos, copiedItemInfos, namedItemInfos, skippedItems, models);
 
                 return CompletableFuture.allOf(
-                        saveCollection(cache, blockStates, b -> blockStatePathProvider.json(
-                                b.builtInRegistryHolder().key().location()
-                        )),
+                        DataProvider.saveAll(
+                                cache,
+                                generator -> BlockModelDefinition.CODEC.encodeStart(JsonOps.INSTANCE, generator.create()).getOrThrow(),
+                                b -> blockStatePathProvider.json(
+                                        b.builtInRegistryHolder().key().identifier()
+                                ),
+                                blockStates
+                        ),
+                        DataProvider.saveAll(cache, ClientItem.CODEC, item -> itemInfoPathProvider.json(item.builtInRegistryHolder().key().identifier()), itemInfos),
+                        DataProvider.saveAll(cache, ClientItem.CODEC, itemInfoPathProvider::json, namedItemInfos),
                         saveCollection(cache, models, modelPathProvider::json)
                 );
             }
 
-            private void validateBlockStates(Map<Block, BlockStateGenerator> blockStates) {
+            private void validateBlockStates(Map<Block, BlockModelDefinitionGenerator> blockStates) {
                 for (Block block : BuiltInRegistries.BLOCK) {
                     if (ModelProviderExclusions.isExcluded(block)) {
                         continue;
                     }
-                    ResourceLocation id = BuiltInRegistries.BLOCK.getKey(block);
+                    Identifier id = BuiltInRegistries.BLOCK.getKey(block);
                     if (id == null || !id.getNamespace().equals(modCore.namespace)) {
                         continue;
                     }
@@ -212,13 +249,58 @@ public abstract class WoverModelProvider implements WoverDataProvider<DataProvid
                 }
             }
 
-            private void addItemModelDelegates(
-                    Map<ResourceLocation, Supplier<JsonElement>> models,
+            private void finalizeItemModels(
+                    Map<Item, ClientItem> itemInfos,
+                    Map<Item, Item> copiedItemInfos,
+                    Map<Identifier, ClientItem> namedItemInfos,
                     Set<Item> skippedItems,
-                    ExistingFileHelper existingFileHelper
+                    Map<Identifier, ModelInstance> models
+            ) {
+                copiedItemInfos.forEach((target, source) -> {
+                    ClientItem donor = itemInfos.get(source);
+                    if (donor == null) {
+                        throw new IllegalStateException("Missing donor item model: " + source + " -> " + target);
+                    }
+                    ClientItem prev = itemInfos.put(target, donor);
+                    if (prev != null && prev != donor) {
+                        throw new IllegalStateException("Duplicate copied item model definition for " + target);
+                    }
+                });
+
+                for (Item item : BuiltInRegistries.ITEM) {
+                    Identifier id = BuiltInRegistries.ITEM.getKey(item);
+                    if (id == null || !id.getNamespace().equals(modCore.namespace)) {
+                        continue;
+                    }
+                    if (itemInfos.containsKey(item)) {
+                        continue;
+                    }
+
+                    // If an explicit item model exists (generated or static), use it directly.
+                    Identifier itemModelId = ModelLocationUtils.getModelLocation(item);
+                    if (hasModel(itemModelId, models)) {
+                        itemInfos.put(item, new ClientItem(ItemModelUtils.plainModel(itemModelId), ClientItem.Properties.DEFAULT));
+                        continue;
+                    }
+
+                    if (item instanceof BlockItem blockItem && !skippedItems.contains(item)) {
+                        Identifier blockModelId = ModelLocationUtils.getModelLocation(blockItem.getBlock());
+                        if (hasModel(blockModelId, models)) {
+                            itemInfos.put(item, new ClientItem(ItemModelUtils.plainModel(blockModelId), ClientItem.Properties.DEFAULT));
+                            continue;
+                        }
+                    }
+
+                    throw new IllegalStateException("Missing item model definition for " + item);
+                }
+            }
+
+            private void addItemModelDelegates(
+                    Map<Identifier, ModelInstance> models,
+                    Set<Item> skippedItems
             ) {
                 BuiltInRegistries.BLOCK.forEach(block -> {
-                    ResourceLocation blockId = BuiltInRegistries.BLOCK.getKey(block);
+                    Identifier blockId = BuiltInRegistries.BLOCK.getKey(block);
                     if (blockId == null || !blockId.getNamespace().equals(modCore.namespace)) {
                         return;
                     }
@@ -226,12 +308,12 @@ public abstract class WoverModelProvider implements WoverDataProvider<DataProvid
                     if (item == null || skippedItems.contains(item)) {
                         return;
                     }
-                    ResourceLocation modelId = ModelLocationUtils.getModelLocation(item);
-                    if (hasModel(modelId, models, existingFileHelper)) {
+                    Identifier modelId = ModelLocationUtils.getModelLocation(item);
+                    if (hasModel(modelId, models)) {
                         return;
                     }
-                    ResourceLocation blockModelId = ModelLocationUtils.getModelLocation(block);
-                    if (!hasModel(blockModelId, models, existingFileHelper)) {
+                    Identifier blockModelId = ModelLocationUtils.getModelLocation(block);
+                    if (!hasModel(blockModelId, models)) {
                         return;
                     }
                     models.put(modelId, new DelegatedModel(blockModelId));
@@ -239,17 +321,18 @@ public abstract class WoverModelProvider implements WoverDataProvider<DataProvid
             }
 
             private boolean hasModel(
-                    ResourceLocation modelId,
-                    Map<ResourceLocation, Supplier<JsonElement>> models,
-                    ExistingFileHelper existingFileHelper
+                    Identifier modelId,
+                    Map<Identifier, ModelInstance> models
             ) {
                 if (models.containsKey(modelId)) {
                     return true;
                 }
-                if (!existingFileHelper.isEnabled()) {
+                if (modCore.modContainer == null) {
                     return false;
                 }
-                return existingFileHelper.exists(modelId, PackType.CLIENT_RESOURCES, ".json", "models");
+                var modFile = modCore.modContainer.getModInfo().getOwningFile().getFile();
+                var path = "assets/" + modelId.getNamespace() + "/models/" + modelId.getPath() + ".json";
+                return modFile.getContents().containsFile(path);
             }
 
             private <T> CompletableFuture<?> saveCollection(

@@ -11,7 +11,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.data.worldgen.Pools;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 import net.minecraft.world.level.levelgen.structure.pools.LegacySinglePoolElement;
 import net.minecraft.world.level.levelgen.structure.pools.SinglePoolElement;
@@ -41,7 +41,7 @@ public class StructurePoolBuilderImpl implements StructurePoolBuilder {
     private StructureTemplatePool.Projection projection;
 
     private static final ResourceKey<StructureProcessorList> EMPTY_PROCESSOR_LIST =
-            ResourceKey.create(Registries.PROCESSOR_LIST, ResourceLocation.withDefaultNamespace("empty"));
+            ResourceKey.create(Registries.PROCESSOR_LIST, Identifier.withDefaultNamespace("empty"));
 
     private List<Pair<Function<StructureTemplatePool.Projection, ? extends StructurePoolElement>, Integer>> elements = new LinkedList<>();
 
@@ -76,19 +76,19 @@ public class StructurePoolBuilderImpl implements StructurePoolBuilder {
 
     @Override
     @NotNull
-    public ElementBuilder startSingle(@NotNull ResourceLocation nbtLocation) {
+    public ElementBuilder startSingle(@NotNull Identifier nbtLocation) {
         return new SinglePoolElementImpl(nbtLocation);
     }
 
     @Override
     @NotNull
-    public ElementBuilder startSingleEnd(@NotNull ResourceLocation nbtLocation) {
+    public ElementBuilder startSingleEnd(@NotNull Identifier nbtLocation) {
         return new SingleEndPoolElementImpl(nbtLocation);
     }
 
     @Override
     @NotNull
-    public ElementBuilder startLegacySingle(@NotNull ResourceLocation nbtLocation) {
+    public ElementBuilder startLegacySingle(@NotNull Identifier nbtLocation) {
         return new LegacyPoolElementImpl(nbtLocation);
     }
 
@@ -166,12 +166,12 @@ public class StructurePoolBuilderImpl implements StructurePoolBuilder {
     }
 
     public class SinglePoolElementImpl implements ElementBuilder {
-        protected final ResourceLocation nbtLocation;
+        protected final Identifier nbtLocation;
         protected Holder<StructureProcessorList> processor;
         private int weight;
         protected LiquidSettings liquidSettings;
 
-        SinglePoolElementImpl(ResourceLocation nbtLocation) {
+        SinglePoolElementImpl(Identifier nbtLocation) {
             this.nbtLocation = nbtLocation;
             this.weight = 1;
             this.liquidSettings = null;
@@ -237,7 +237,7 @@ public class StructurePoolBuilderImpl implements StructurePoolBuilder {
     }
 
     public class LegacyPoolElementImpl extends SinglePoolElementImpl {
-        LegacyPoolElementImpl(ResourceLocation nbtLocation) {
+        LegacyPoolElementImpl(Identifier nbtLocation) {
             super(nbtLocation);
         }
 
@@ -252,7 +252,7 @@ public class StructurePoolBuilderImpl implements StructurePoolBuilder {
     }
 
     public class SingleEndPoolElementImpl extends SinglePoolElementImpl {
-        SingleEndPoolElementImpl(ResourceLocation nbtLocation) {
+        SingleEndPoolElementImpl(Identifier nbtLocation) {
             super(nbtLocation);
         }
 

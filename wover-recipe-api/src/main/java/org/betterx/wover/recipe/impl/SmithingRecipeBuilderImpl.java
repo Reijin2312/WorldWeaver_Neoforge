@@ -4,7 +4,7 @@ import org.betterx.wover.recipe.api.SmithingRecipeBuilder;
 
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.data.recipes.SmithingTransformRecipeBuilder;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.SmithingTemplateItem;
@@ -19,7 +19,7 @@ public class SmithingRecipeBuilderImpl extends BaseRecipeBuilderImpl<SmithingRec
     protected Ingredient addon;
 
     public SmithingRecipeBuilderImpl(
-            @NotNull ResourceLocation id,
+            @NotNull Identifier id,
             @NotNull ItemLike output
     ) {
         super(id, output);
@@ -34,7 +34,7 @@ public class SmithingRecipeBuilderImpl extends BaseRecipeBuilderImpl<SmithingRec
 
     @Override
     public SmithingRecipeBuilderImpl base(TagKey<Item> in) {
-        this.base = Ingredient.of(in);
+        this.base = ingredientOf(in);
         return this;
     }
 
@@ -52,7 +52,7 @@ public class SmithingRecipeBuilderImpl extends BaseRecipeBuilderImpl<SmithingRec
 
     @Override
     public SmithingRecipeBuilderImpl addon(TagKey<Item> in) {
-        this.addon = Ingredient.of(in);
+        this.addon = ingredientOf(in);
         return this;
     }
 
@@ -95,6 +95,6 @@ public class SmithingRecipeBuilderImpl extends BaseRecipeBuilderImpl<SmithingRec
         for (var item : unlocks.entrySet()) {
             builder.unlocks(item.getKey(), item.getValue());
         }
-        builder.save(ctx, id);
+        builder.save(ctx, recipeKey(id));
     }
 }

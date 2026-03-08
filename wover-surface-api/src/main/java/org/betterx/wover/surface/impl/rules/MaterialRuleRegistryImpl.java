@@ -7,7 +7,7 @@ import org.betterx.wover.surface.api.rules.MaterialRuleManager;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.levelgen.SurfaceRules;
 
 import net.neoforged.neoforge.registries.RegisterEvent;
@@ -27,7 +27,7 @@ public class MaterialRuleRegistryImpl {
     }
 
     @NotNull
-    public static ResourceKey<MapCodec<? extends SurfaceRules.RuleSource>> createKey(ResourceLocation location) {
+    public static ResourceKey<MapCodec<? extends SurfaceRules.RuleSource>> createKey(Identifier location) {
         return ResourceKey.create(
                 Registries.MATERIAL_RULE,
                 location
@@ -37,11 +37,11 @@ public class MaterialRuleRegistryImpl {
     @ApiStatus.Internal
     public static void register(RegisterEvent event) {
         event.register(Registries.MATERIAL_RULE, helper -> {
-            helper.register(SWITCH_RULE.location(), SwitchRuleSource.CODEC);
+            helper.register(SWITCH_RULE.identifier(), SwitchRuleSource.CODEC);
 
             if (LegacyHelper.isLegacyEnabled()) {
                 helper.register(
-                        LegacyHelper.BCLIB_CORE.convertNamespace(SWITCH_RULE.location()),
+                        LegacyHelper.BCLIB_CORE.convertNamespace(SWITCH_RULE.identifier()),
                         LegacyHelper.wrap(SwitchRuleSource.CODEC)
                 );
             }

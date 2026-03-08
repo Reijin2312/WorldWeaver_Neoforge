@@ -6,7 +6,7 @@ import org.betterx.wover.feature.api.configured.configurators.WeightedBlockPatch
 
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.levelgen.blockpredicates.BlockPredicate;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.feature.Feature;
@@ -108,7 +108,7 @@ public class WeightedBlockPatchImpl extends WeightedBaseBlockImpl<RandomPatchCon
 
 
     public static class Key extends ConfiguredFeatureKey<WeightedBlockPatch> {
-        public Key(ResourceLocation id) {
+        public Key(Identifier id) {
             super(id);
         }
 
@@ -119,7 +119,7 @@ public class WeightedBlockPatchImpl extends WeightedBaseBlockImpl<RandomPatchCon
     }
 
     public static class KeyBonemeal extends ConfiguredFeatureKey<WeightedBlockPatch> {
-        public KeyBonemeal(ResourceLocation id) {
+        public KeyBonemeal(Identifier id) {
             super(id);
         }
 

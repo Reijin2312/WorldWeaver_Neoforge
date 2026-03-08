@@ -8,8 +8,9 @@ import org.betterx.wover.entrypoint.LibWoverBiome;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.Registry;
+import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.KeyDispatchDataCodec;
 
 import java.util.function.Function;
@@ -40,7 +41,7 @@ public class BiomeCodecRegistryImpl {
 
     public static MapCodec<? extends BiomeData> register(
             Registry<MapCodec<? extends BiomeData>> registry,
-            ResourceLocation location,
+            Identifier location,
             KeyDispatchDataCodec<? extends BiomeData> keyDispatchDataCodec
     ) {
         return register(registry, location, keyDispatchDataCodec, null);
@@ -48,7 +49,7 @@ public class BiomeCodecRegistryImpl {
 
     public static MapCodec<? extends BiomeData> register(
             Registry<MapCodec<? extends BiomeData>> registry,
-            ResourceLocation location,
+            Identifier location,
             KeyDispatchDataCodec<? extends BiomeData> keyDispatchDataCodec,
             @Nullable KeyDispatchDataCodec<? extends BiomeData> networkKeyDispatchDataCodec
     ) {
@@ -68,7 +69,7 @@ public class BiomeCodecRegistryImpl {
     private static MapCodec<? extends BiomeData> onBootstrap(Registry<MapCodec<? extends BiomeData>> registry) {
         final var biomeData = LibWoverBiome.C.id("vanilla_data");
         if (registry.containsKey(biomeData)) {
-            return registry.get(biomeData);
+            return registry.get(biomeData).map(Holder.Reference::value).orElse(null);
         }
 
         return register(registry, biomeData, BiomeData.KEY_CODEC);

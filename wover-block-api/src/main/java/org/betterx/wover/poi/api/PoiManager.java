@@ -2,7 +2,7 @@ package org.betterx.wover.poi.api;
 
 import org.betterx.wover.poi.impl.PoiManagerImpl;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -21,7 +21,7 @@ public class PoiManager {
      * @return The new PoiType
      */
     public static WoverPoiType register(
-            ResourceLocation location,
+            Identifier location,
             Set<BlockState> matchingStates,
             int maxTickets,
             int validRanges
@@ -40,7 +40,7 @@ public class PoiManager {
      * @return The new PoiType
      */
     public static WoverPoiType register(
-            ResourceLocation location,
+            Identifier location,
             Set<BlockState> matchingStates,
             int maxTickets,
             int validRanges,

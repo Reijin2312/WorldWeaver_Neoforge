@@ -4,7 +4,7 @@ import de.ambertation.wunderlib.configs.AbstractConfig;
 import org.betterx.wover.config.impl.ConfigsImpl;
 import org.betterx.wover.core.api.ModCore;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.function.Supplier;
 
@@ -33,7 +33,7 @@ public class Configs {
         return ConfigsImpl.register(configSupplier);
     }
 
-    public static <T extends AbstractConfig<?>> T get(ResourceLocation location) {
+    public static <T extends AbstractConfig<?>> T get(Identifier location) {
         return ConfigsImpl.get(location);
     }
 }

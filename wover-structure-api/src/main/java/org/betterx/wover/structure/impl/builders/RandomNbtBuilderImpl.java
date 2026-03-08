@@ -8,7 +8,7 @@ import org.betterx.wover.structure.api.structures.nbt.RandomNbtStructureElement;
 import org.betterx.wover.util.RandomizedWeightedList;
 
 import net.minecraft.data.worldgen.BootstrapContext;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.levelgen.structure.Structure;
 
 public class RandomNbtBuilderImpl
@@ -42,7 +42,7 @@ public class RandomNbtBuilderImpl
     }
 
     @Override
-    public RandomNbtBuilder addElement(ResourceLocation elementId, int yOffset, double weight) {
+    public RandomNbtBuilder addElement(Identifier elementId, int yOffset, double weight) {
         elements.add(new RandomNbtStructureElement(elementId, yOffset), weight);
         return this;
     }

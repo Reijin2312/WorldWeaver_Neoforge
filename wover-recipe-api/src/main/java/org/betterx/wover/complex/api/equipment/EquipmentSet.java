@@ -2,12 +2,11 @@ package org.betterx.wover.complex.api.equipment;
 
 import org.betterx.wover.core.api.ModCore;
 
-import net.minecraft.core.Holder;
 import net.minecraft.data.recipes.RecipeOutput;
-import net.minecraft.world.item.ArmorItem;
-import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Tier;
+import net.minecraft.world.item.ToolMaterial;
+import net.minecraft.world.item.equipment.ArmorMaterial;
+import net.minecraft.world.item.equipment.ArmorType;
 import net.minecraft.world.level.ItemLike;
 
 import java.util.HashMap;
@@ -20,11 +19,11 @@ public abstract class EquipmentSet {
     private static final List<EquipmentSet> SETS = new LinkedList<>();
 
     public interface ToolFactory<I extends Item> {
-        I create(Tier tier, Item.Properties properties);
+        I create(ToolMaterial material, Item.Properties properties);
     }
 
     public interface ArmorFactory<I extends Item> {
-        I create(Holder<ArmorMaterial> holder, ArmorItem.Type type, Item.Properties properties);
+        I create(ArmorMaterial material, ArmorType type, Item.Properties properties);
     }
 
     public final ToolTier toolTier;
@@ -158,4 +157,3 @@ public abstract class EquipmentSet {
         return items;
     }
 }
-

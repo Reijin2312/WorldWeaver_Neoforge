@@ -458,4 +458,3 @@ public class SortedLinkedList<E> implements Iterable<E>, Collection<E> {
         return sb.toString();
     }
 }
-

@@ -120,7 +120,7 @@ public class FeatureMap extends ArrayList<LinkedList<Holder<PlacedFeature>>> {
                 continue;
             }
             for (ResourceKey<PlacedFeature> key : keys) {
-                registry.getHolder(key).ifPresent(holders::add);
+                registry.get(key).ifPresent(holders::add);
             }
         }
         resolved = true;

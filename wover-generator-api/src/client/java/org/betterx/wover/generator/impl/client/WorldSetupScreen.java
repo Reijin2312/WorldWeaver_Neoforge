@@ -33,7 +33,7 @@ import net.minecraft.locale.Language;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
@@ -42,14 +42,11 @@ import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.levelgen.WorldDimensions;
 import net.minecraft.world.level.levelgen.presets.WorldPreset;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 import java.util.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-@OnlyIn(Dist.CLIENT)
 public class WorldSetupScreen extends LayoutScreen implements BiomeSourceConfigPanel.DimensionUpdater {
     protected record DimensionValue(Holder<WorldPreset> preset, ResourceKey<WorldPreset> key, LevelStem dimension) {
     }
@@ -154,10 +151,10 @@ public class WorldSetupScreen extends LayoutScreen implements BiomeSourceConfigP
     }
 
     private String languageKey(Holder<WorldPreset> key) {
-        return languageKey(key.unwrapKey().orElseThrow().location());
+        return languageKey(key.unwrapKey().orElseThrow().identifier());
     }
 
-    private String languageKey(ResourceLocation key) {
+    private String languageKey(Identifier key) {
         return "generator." + key.getNamespace() + "." + key.getPath();
     }
 
@@ -171,9 +168,9 @@ public class WorldSetupScreen extends LayoutScreen implements BiomeSourceConfigP
 
         final Registry<WorldPreset> worldPresets = WorldState
                 .allStageRegistryAccess()
-                .registryOrThrow(Registries.WORLD_PRESET);
+                .lookupOrThrow(Registries.WORLD_PRESET);
 
-        final Optional<HolderSet.Named<WorldPreset>> normal = worldPresets.getTag(WorldPresetTags.NORMAL);
+        final Optional<HolderSet.Named<WorldPreset>> normal = worldPresets.get(WorldPresetTags.NORMAL);
         if (normal.isPresent()) {
             Set<ChunkGenerator> generators = new HashSet<>();
             final Language language = Language.getInstance();
@@ -188,7 +185,7 @@ public class WorldSetupScreen extends LayoutScreen implements BiomeSourceConfigP
                                               .compareTo(language.getOrDefault(languageKey(b))))
                     .forEach(preset -> {
                         final var info = WorldPresetInfoRegistry.getFor(preset);
-                        final ResourceLocation presetKey = preset.unwrapKey().orElseThrow().location();
+                        final Identifier presetKey = preset.unwrapKey().orElseThrow().identifier();
                         final Optional<LevelStem> targetDimension = preset.value()
                                                                           .createWorldDimensions()
                                                                           .get(forDimension);
@@ -216,7 +213,7 @@ public class WorldSetupScreen extends LayoutScreen implements BiomeSourceConfigP
 
             for (DimensionValue dimensionValue : options) {
                 dimensions.addOption(Component.translatable(languageKey(dimensionValue.preset)), dimensionValue);
-                if (finalConfiguredKey != null && dimensionValue.key.location().equals(finalConfiguredKey.location())) {
+                if (finalConfiguredKey != null && dimensionValue.key.identifier().equals(finalConfiguredKey.identifier())) {
                     selectedStem = dimensionValue;
                 }
             }
@@ -238,7 +235,7 @@ public class WorldSetupScreen extends LayoutScreen implements BiomeSourceConfigP
             DimensionContent contentData
     ) {
         VerticalStack content = new VerticalStack(fill(), fit()).centerHorizontal();
-        content.setDebugName("Stack " + contentData.dimensionKey.location());
+        content.setDebugName("Stack " + contentData.dimensionKey.identifier());
         content.addSpacer(16);
         content.addText(fit(), fit(), title).centerHorizontal();
         content.addHorizontalSeparator(8).alignTop();
@@ -364,7 +361,7 @@ public class WorldSetupScreen extends LayoutScreen implements BiomeSourceConfigP
                     LayoutComponent<?, ? extends LayoutComponent<?, ?>> page = contentPage(
                             configuredPreset,
                             Component.translatable("title.screen.wover.worldgen."
-                                    + content.dimensionKey.location().getPath() + "_generator"),
+                                    + content.dimensionKey.identifier().getPath() + "_generator"),
                             content
                     );
 
@@ -373,10 +370,10 @@ public class WorldSetupScreen extends LayoutScreen implements BiomeSourceConfigP
                     }
 
                     main.addPage(
-                            Component.translatable("title.wover." + content.dimensionKey.location().getPath()),
+                            Component.translatable("title.wover." + content.dimensionKey.identifier().getPath()),
                             this.scroller = VerticalScroll
                                     .create(page)
-                                    .setDebugName(content.dimensionKey.location().getPath() + " scroll")
+                                    .setDebugName(content.dimensionKey.identifier().getPath() + " scroll")
                     );
                 });
 

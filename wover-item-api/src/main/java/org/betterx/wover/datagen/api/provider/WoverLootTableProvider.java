@@ -8,12 +8,9 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.loot.LootTableProvider;
 import net.minecraft.data.loot.LootTableSubProvider;
-import net.minecraft.data.CachedOutput;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.storage.loot.LootTable;
-import net.minecraft.world.level.storage.loot.parameters.LootContextParamSet;
-
-import net.neoforged.neoforge.common.data.ExistingFileHelper;
+import net.minecraft.util.context.ContextKeySet;
 
 import java.util.List;
 import java.util.Set;
@@ -32,11 +29,11 @@ public abstract class WoverLootTableProvider implements WoverDataProvider<LootTa
      */
     protected final ModCore modCore;
 
-    protected final LootContextParamSet lootContextType;
+    protected final ContextKeySet lootContextType;
 
     public WoverLootTableProvider(
             ModCore modCore,
-            LootContextParamSet lootContextType
+            ContextKeySet lootContextType
     ) {
         this(modCore, modCore.namespace, lootContextType);
     }
@@ -44,7 +41,7 @@ public abstract class WoverLootTableProvider implements WoverDataProvider<LootTa
     public WoverLootTableProvider(
             ModCore modCore,
             String title,
-            LootContextParamSet lootContextType
+            ContextKeySet lootContextType
     ) {
         this.modCore = modCore;
         this.title = title;
@@ -59,8 +56,7 @@ public abstract class WoverLootTableProvider implements WoverDataProvider<LootTa
     @Override
     public LootTableProvider getProvider(
             PackOutput output,
-            CompletableFuture<HolderLookup.Provider> registriesFuture,
-            ExistingFileHelper existingFileHelper
+            CompletableFuture<HolderLookup.Provider> registriesFuture
     ) {
         return new LootTableProvider(
                 output,

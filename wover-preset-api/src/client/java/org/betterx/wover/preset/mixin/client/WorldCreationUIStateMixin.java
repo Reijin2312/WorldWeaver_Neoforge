@@ -8,8 +8,6 @@ import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.levelgen.presets.WorldPreset;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -24,7 +22,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
 
-@OnlyIn(Dist.CLIENT)
 @Mixin(WorldCreationUiState.class)
 public abstract class WorldCreationUIStateMixin {
     @Shadow

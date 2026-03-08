@@ -7,8 +7,8 @@ import org.betterx.wover.feature.api.configured.configurators.AsBlockColumn;
 import net.minecraft.core.Direction;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.random.SimpleWeightedRandomList;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.random.WeightedList;
 import net.minecraft.util.valueproviders.ConstantInt;
 import net.minecraft.util.valueproviders.IntProvider;
 import net.minecraft.world.level.block.Block;
@@ -61,7 +61,7 @@ public class AsBlockColumnImpl extends FeatureConfiguratorImpl<BlockColumnConfig
 
     @Override
     public final AsBlockColumn addRandom(IntProvider height, BlockState... states) {
-        var builder = SimpleWeightedRandomList.<BlockState>builder();
+        var builder = WeightedList.<BlockState>builder();
         for (BlockState state : states) builder.add(state, 1);
         return add(height, new WeightedStateProvider(builder.build()));
     }
@@ -160,7 +160,7 @@ public class AsBlockColumnImpl extends FeatureConfiguratorImpl<BlockColumnConfig
     }
 
     public static class Key extends ConfiguredFeatureKey<AsBlockColumn> {
-        public Key(ResourceLocation id) {
+        public Key(Identifier id) {
             super(id);
         }
 

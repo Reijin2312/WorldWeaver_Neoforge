@@ -4,17 +4,16 @@ import org.betterx.wover.core.api.ModCore;
 import org.betterx.wover.item.api.ItemRegistry;
 import org.betterx.wover.recipe.api.CraftingRecipeBuilder;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
-import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.item.*;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.ItemLike;
 
 import java.util.function.Supplier;
 
 abstract class ItemDescription<I extends Item> {
     public final I item;
-    public final ResourceLocation location;
+    public final Identifier location;
 
     public ItemDescription(
             ModCore modCore,
@@ -23,39 +22,51 @@ abstract class ItemDescription<I extends Item> {
             TagKey<Item>... tags
     ) {
         this.location = modCore.mk(path);
-        this.item = creator.get();
+        this.item = ItemRegistry.withConstructionId(this.location, creator::get);
         ItemRegistry.forMod(modCore).registerAsTool(path, item, tags);
     }
 
-    static boolean buildRecipe(Item tool, ItemLike stick, CraftingRecipeBuilder builder) {
-        if (tool instanceof ShearsItem) {
+    static boolean buildToolRecipe(ToolSlot slot, ItemLike stick, CraftingRecipeBuilder builder) {
+        if (slot == ToolSlot.SHEARS_SLOT) {
             builder.shape(" #", "# ");
-        } else if (tool instanceof ArmorItem bai) {
-            if (bai.getType().getSlot() == EquipmentSlot.FEET) {
-                builder.shape("# #", "# #");
-            } else if (bai.getType().getSlot() == EquipmentSlot.HEAD) {
-                builder.shape("###", "# #");
-            } else if (bai.getType().getSlot() == EquipmentSlot.CHEST) {
-                builder.shape("# #", "###", "###");
-            } else if (bai.getType().getSlot() == EquipmentSlot.LEGS) {
-                builder.shape("###", "# #", "# #");
-            } else return true;
-        } else {
-            builder.addMaterial('I', stick);
-            if (tool instanceof PickaxeItem) {
-                builder.shape("###", " I ", " I ");
-            } else if (tool instanceof AxeItem) {
-                builder.shape("##", "#I", " I");
-            } else if (tool instanceof HoeItem) {
-                builder.shape("##", " I", " I");
-            } else if (tool instanceof ShovelItem) {
-                builder.shape("#", "I", "I");
-            } else if (tool instanceof SwordItem) {
-                builder.shape("#", "#", "I");
-            } else return true;
+            return false;
+        }
+
+        builder.addMaterial('I', stick);
+        switch (slot) {
+            case PICKAXE_SLOT, HAMMER_SLOT -> builder.shape("###", " I ", " I ");
+            case AXE_SLOT -> builder.shape("##", "#I", " I");
+            case HOE_SLOT -> builder.shape("##", " I", " I");
+            case SHOVEL_SLOT -> builder.shape("#", "I", "I");
+            case SWORD_SLOT -> builder.shape("#", "#", "I");
+            default -> {
+                return true;
+            }
         }
 
         return false;
+    }
+
+    static boolean buildArmorRecipe(ArmorSlot slot, CraftingRecipeBuilder builder) {
+        return switch (slot) {
+            case BOOTS_SLOT -> {
+                builder.shape("# #", "# #");
+                yield false;
+            }
+            case HELMET_SLOT -> {
+                builder.shape("###", "# #");
+                yield false;
+            }
+            case CHESTPLATE_SLOT -> {
+                builder.shape("# #", "###", "###");
+                yield false;
+            }
+            case LEGGINGS_SLOT -> {
+                builder.shape("###", "# #", "# #");
+                yield false;
+            }
+            default -> true;
+        };
     }
 
     public I getItem() {

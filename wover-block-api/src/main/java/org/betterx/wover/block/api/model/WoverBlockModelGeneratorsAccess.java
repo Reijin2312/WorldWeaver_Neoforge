@@ -1,66 +1,65 @@
 package org.betterx.wover.block.api.model;
 
-import net.minecraft.core.Direction;
-import net.minecraft.data.models.BlockModelGenerators;
-import net.minecraft.data.models.blockstates.BlockStateGenerator;
-import net.minecraft.data.models.blockstates.MultiVariantGenerator;
-import net.minecraft.data.models.blockstates.PropertyDispatch;
-import net.minecraft.data.models.blockstates.Variant;
-import net.minecraft.data.models.blockstates.VariantProperties;
-import net.minecraft.data.models.model.ModelLocationUtils;
-import net.minecraft.data.models.model.ModelTemplates;
-import net.minecraft.data.models.model.TextureMapping;
-import net.minecraft.data.models.model.TexturedModel;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.data.models.BlockModelGenerators;
+import net.minecraft.client.data.models.ItemModelOutput;
+import net.minecraft.client.data.models.MultiVariant;
+import net.minecraft.client.data.models.blockstates.BlockModelDefinitionGenerator;
+import net.minecraft.client.data.models.blockstates.MultiVariantGenerator;
+import net.minecraft.client.data.models.blockstates.PropertyDispatch;
+import net.minecraft.client.data.models.model.ModelLocationUtils;
+import net.minecraft.client.data.models.model.ModelTemplates;
+import net.minecraft.client.data.models.model.TextureMapping;
+import net.minecraft.client.data.models.model.TexturedModel;
+import net.minecraft.client.renderer.block.model.VariantMutator;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.state.properties.Half;
-import net.minecraft.world.level.block.state.properties.StairsShape;
-
-import com.google.gson.JsonElement;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 public class WoverBlockModelGeneratorsAccess extends BlockModelGenerators {
+    private final Set<Item> skippedAutoModels;
+
     public WoverBlockModelGeneratorsAccess(
-            Consumer<BlockStateGenerator> blockStateOutput,
-            BiConsumer<ResourceLocation, Supplier<JsonElement>> modelOutput,
-            Consumer<Item> skippedAutoModelsOutput
+            Consumer<BlockModelDefinitionGenerator> blockStateOutput,
+            ItemModelOutput itemModelOutput,
+            BiConsumer<Identifier, net.minecraft.client.data.models.model.ModelInstance> modelOutput,
+            Set<Item> skippedAutoModels
     ) {
-        super(blockStateOutput, modelOutput, skippedAutoModelsOutput);
+        super(blockStateOutput, itemModelOutput, modelOutput);
+        this.skippedAutoModels = skippedAutoModels;
     }
 
-    public Consumer<BlockStateGenerator> blockStateOutput() {
+    public Consumer<BlockModelDefinitionGenerator> blockStateOutput() {
         return this.blockStateOutput;
     }
 
-    public BiConsumer<ResourceLocation, Supplier<JsonElement>> modelOutput() {
+    public BiConsumer<Identifier, net.minecraft.client.data.models.model.ModelInstance> modelOutput() {
         return this.modelOutput;
     }
 
     public Map<Block, TexturedModel> texturedModels() {
-        return this.texturedModels;
+        return BlockModelGenerators.TEXTURED_MODELS;
     }
 
-    @Override
     public void skipAutoItemBlock(Block block) {
-        super.skipAutoItemBlock(block);
+        Item item = block.asItem();
+        if (item != Items.AIR) {
+            skippedAutoModels.add(item);
+        }
     }
 
-    @Override
-    public void delegateItemModel(Block block, ResourceLocation model) {
-        super.delegateItemModel(block, model);
+    public void delegateItemModel(Block block, Identifier model) {
+        this.registerSimpleItemModel(block, model);
     }
 
-    @Override
     public void createSimpleFlatItemModel(Item item) {
-        super.createSimpleFlatItemModel(item);
+        this.registerSimpleItemModel(item, this.createFlatItemModel(item));
     }
 
     public void createSimpleFlatItemModel(Block block) {
@@ -68,11 +67,8 @@ public class WoverBlockModelGeneratorsAccess extends BlockModelGenerators {
         if (item == Items.AIR) {
             return;
         }
-        ModelTemplates.FLAT_ITEM.create(
-                ModelLocationUtils.getModelLocation(item),
-                TextureMapping.layer0(block),
-                this.modelOutput
-        );
+        Identifier modelLocation = this.createFlatItemModelWithBlockTexture(item, block);
+        this.registerSimpleItemModel(item, modelLocation);
     }
 
     @Override
@@ -96,221 +92,139 @@ public class WoverBlockModelGeneratorsAccess extends BlockModelGenerators {
             BiFunction<Block, Block, TextureMapping> textureMappingGetter
     ) {
         TextureMapping textureMapping = textureMappingGetter.apply(craftingTableBlock, craftingTableMaterialBlock);
-        this.blockStateOutput.accept(createSimpleBlock(
-                craftingTableBlock,
-                ModelTemplates.CUBE.create(craftingTableBlock, textureMapping, this.modelOutput)
-        ));
+        Identifier modelLocation = ModelTemplates.CUBE.create(craftingTableBlock, textureMapping, this.modelOutput);
+        this.blockStateOutput.accept(createSimpleBlock(craftingTableBlock, modelLocation));
+        this.delegateItemModel(craftingTableBlock, modelLocation);
     }
 
     public void createNonTemplateHorizontalBlock(Block block) {
-        this.blockStateOutput.accept(MultiVariantGenerator
-                .multiVariant(
-                        block,
-                        Variant.variant()
-                                .with(VariantProperties.MODEL, ModelLocationUtils.getModelLocation(block))
-                )
-                .with(createHorizontalFacingDispatch())
+        MultiVariant variant = BlockModelGenerators.plainVariant(ModelLocationUtils.getModelLocation(block));
+        this.blockStateOutput.accept(
+                MultiVariantGenerator
+                        .dispatch(block, variant)
+                        .with(createHorizontalFacingDispatch())
         );
     }
 
-    public PropertyDispatch createColumnWithFacing() {
-        return PropertyDispatch
-                .property(BlockStateProperties.FACING)
-                .select(Direction.DOWN, Variant
-                        .variant()
-                        .with(VariantProperties.X_ROT, VariantProperties.Rotation.R180))
-                .select(Direction.UP, Variant.variant())
-                .select(Direction.NORTH, Variant
-                        .variant()
-                        .with(VariantProperties.X_ROT, VariantProperties.Rotation.R90))
-                .select(Direction.SOUTH, Variant
-                        .variant()
-                        .with(VariantProperties.X_ROT, VariantProperties.Rotation.R90)
-                        .with(VariantProperties.Y_ROT, VariantProperties.Rotation.R180))
-                .select(Direction.WEST, Variant
-                        .variant()
-                        .with(VariantProperties.X_ROT, VariantProperties.Rotation.R90)
-                        .with(VariantProperties.Y_ROT, VariantProperties.Rotation.R270))
-                .select(Direction.EAST, Variant
-                        .variant()
-                        .with(VariantProperties.X_ROT, VariantProperties.Rotation.R90)
-                        .with(VariantProperties.Y_ROT, VariantProperties.Rotation.R90));
+    public PropertyDispatch<VariantMutator> createColumnWithFacing() {
+        return BlockModelGenerators.ROTATIONS_COLUMN_WITH_FACING;
     }
 
-    public static PropertyDispatch createHorizontalFacingDispatch() {
-        return PropertyDispatch
-                .property(BlockStateProperties.HORIZONTAL_FACING)
-                .select(Direction.EAST, Variant
-                        .variant()
-                        .with(VariantProperties.Y_ROT, VariantProperties.Rotation.R90))
-                .select(Direction.SOUTH, Variant
-                        .variant()
-                        .with(VariantProperties.Y_ROT, VariantProperties.Rotation.R180))
-                .select(Direction.WEST, Variant
-                        .variant()
-                        .with(VariantProperties.Y_ROT, VariantProperties.Rotation.R270))
-                .select(Direction.NORTH, Variant.variant());
+    public static PropertyDispatch<VariantMutator> createHorizontalFacingDispatch() {
+        return BlockModelGenerators.ROTATION_HORIZONTAL_FACING;
     }
 
-    public static MultiVariantGenerator createSimpleBlock(Block block, ResourceLocation modelLocation) {
-        return BlockModelGenerators.createSimpleBlock(block, modelLocation);
+    public static MultiVariantGenerator createSimpleBlock(Block block, Identifier modelLocation) {
+        return BlockModelGenerators.createSimpleBlock(block, BlockModelGenerators.plainVariant(modelLocation));
     }
 
-    public static BlockStateGenerator createButton(Block block, ResourceLocation button, ResourceLocation pressed) {
-        return BlockModelGenerators.createButton(block, button, pressed);
+    public static BlockModelDefinitionGenerator createButton(Block block, Identifier button, Identifier pressed) {
+        return BlockModelGenerators.createButton(
+                block,
+                BlockModelGenerators.plainVariant(button),
+                BlockModelGenerators.plainVariant(pressed)
+        );
     }
 
-    public static BlockStateGenerator createCustomFence(
+    public static BlockModelDefinitionGenerator createCustomFence(
             Block block,
-            ResourceLocation post,
-            ResourceLocation sideNorth,
-            ResourceLocation sideEast,
-            ResourceLocation sideSouth,
-            ResourceLocation sideWest
+            Identifier post,
+            Identifier sideNorth,
+            Identifier sideEast,
+            Identifier sideSouth,
+            Identifier sideWest
     ) {
-        return BlockModelGenerators.createCustomFence(block, post, sideNorth, sideEast, sideSouth, sideWest);
+        return BlockModelGenerators.createCustomFence(
+                block,
+                BlockModelGenerators.plainVariant(post),
+                BlockModelGenerators.plainVariant(sideNorth),
+                BlockModelGenerators.plainVariant(sideEast),
+                BlockModelGenerators.plainVariant(sideSouth),
+                BlockModelGenerators.plainVariant(sideWest)
+        );
     }
 
-    public static BlockStateGenerator createFence(Block block, ResourceLocation post, ResourceLocation side) {
-        return BlockModelGenerators.createFence(block, post, side);
+    public static BlockModelDefinitionGenerator createFence(Block block, Identifier post, Identifier side) {
+        return BlockModelGenerators.createFence(
+                block,
+                BlockModelGenerators.plainVariant(post),
+                BlockModelGenerators.plainVariant(side)
+        );
     }
 
-    public static BlockStateGenerator createWall(
+    public static BlockModelDefinitionGenerator createWall(
             Block block,
-            ResourceLocation post,
-            ResourceLocation sideLow,
-            ResourceLocation sideTall
+            Identifier post,
+            Identifier sideLow,
+            Identifier sideTall
     ) {
-        return BlockModelGenerators.createWall(block, post, sideLow, sideTall);
+        return BlockModelGenerators.createWall(
+                block,
+                BlockModelGenerators.plainVariant(post),
+                BlockModelGenerators.plainVariant(sideLow),
+                BlockModelGenerators.plainVariant(sideTall)
+        );
     }
 
-    public static BlockStateGenerator createFenceGate(
+    public static BlockModelDefinitionGenerator createFenceGate(
             Block block,
-            ResourceLocation open,
-            ResourceLocation closed,
-            ResourceLocation wallOpen,
-            ResourceLocation wallClosed,
+            Identifier open,
+            Identifier closed,
+            Identifier wallOpen,
+            Identifier wallClosed,
             boolean uvlock
     ) {
-        return BlockModelGenerators.createFenceGate(block, open, closed, wallOpen, wallClosed, uvlock);
-    }
-
-    public static BlockStateGenerator createStairs(
-            Block block,
-            ResourceLocation inner,
-            ResourceLocation straight,
-            ResourceLocation outer
-    ) {
-        var dispatch = PropertyDispatch.properties(
-                BlockStateProperties.HORIZONTAL_FACING,
-                BlockStateProperties.HALF,
-                BlockStateProperties.STAIRS_SHAPE,
-                BlockStateProperties.WATERLOGGED
+        return BlockModelGenerators.createFenceGate(
+                block,
+                BlockModelGenerators.plainVariant(open),
+                BlockModelGenerators.plainVariant(closed),
+                BlockModelGenerators.plainVariant(wallOpen),
+                BlockModelGenerators.plainVariant(wallClosed),
+                uvlock
         );
-
-        // Bottom half
-        selectStairsVariant(dispatch, Direction.EAST, Half.BOTTOM, StairsShape.STRAIGHT, stairsVariant(straight, VariantProperties.Rotation.R0, VariantProperties.Rotation.R0, false));
-        selectStairsVariant(dispatch, Direction.WEST, Half.BOTTOM, StairsShape.STRAIGHT, stairsVariant(straight, VariantProperties.Rotation.R0, VariantProperties.Rotation.R180, true));
-        selectStairsVariant(dispatch, Direction.SOUTH, Half.BOTTOM, StairsShape.STRAIGHT, stairsVariant(straight, VariantProperties.Rotation.R0, VariantProperties.Rotation.R90, true));
-        selectStairsVariant(dispatch, Direction.NORTH, Half.BOTTOM, StairsShape.STRAIGHT, stairsVariant(straight, VariantProperties.Rotation.R0, VariantProperties.Rotation.R270, true));
-
-        selectStairsVariant(dispatch, Direction.EAST, Half.BOTTOM, StairsShape.INNER_LEFT, stairsVariant(inner, VariantProperties.Rotation.R0, VariantProperties.Rotation.R270, true));
-        selectStairsVariant(dispatch, Direction.WEST, Half.BOTTOM, StairsShape.INNER_LEFT, stairsVariant(inner, VariantProperties.Rotation.R0, VariantProperties.Rotation.R90, true));
-        selectStairsVariant(dispatch, Direction.SOUTH, Half.BOTTOM, StairsShape.INNER_LEFT, stairsVariant(inner, VariantProperties.Rotation.R0, VariantProperties.Rotation.R0, false));
-        selectStairsVariant(dispatch, Direction.NORTH, Half.BOTTOM, StairsShape.INNER_LEFT, stairsVariant(inner, VariantProperties.Rotation.R0, VariantProperties.Rotation.R180, true));
-
-        selectStairsVariant(dispatch, Direction.EAST, Half.BOTTOM, StairsShape.INNER_RIGHT, stairsVariant(inner, VariantProperties.Rotation.R0, VariantProperties.Rotation.R0, false));
-        selectStairsVariant(dispatch, Direction.WEST, Half.BOTTOM, StairsShape.INNER_RIGHT, stairsVariant(inner, VariantProperties.Rotation.R0, VariantProperties.Rotation.R180, true));
-        selectStairsVariant(dispatch, Direction.SOUTH, Half.BOTTOM, StairsShape.INNER_RIGHT, stairsVariant(inner, VariantProperties.Rotation.R0, VariantProperties.Rotation.R90, true));
-        selectStairsVariant(dispatch, Direction.NORTH, Half.BOTTOM, StairsShape.INNER_RIGHT, stairsVariant(inner, VariantProperties.Rotation.R0, VariantProperties.Rotation.R270, true));
-
-        selectStairsVariant(dispatch, Direction.EAST, Half.BOTTOM, StairsShape.OUTER_LEFT, stairsVariant(outer, VariantProperties.Rotation.R0, VariantProperties.Rotation.R270, true));
-        selectStairsVariant(dispatch, Direction.WEST, Half.BOTTOM, StairsShape.OUTER_LEFT, stairsVariant(outer, VariantProperties.Rotation.R0, VariantProperties.Rotation.R90, true));
-        selectStairsVariant(dispatch, Direction.SOUTH, Half.BOTTOM, StairsShape.OUTER_LEFT, stairsVariant(outer, VariantProperties.Rotation.R0, VariantProperties.Rotation.R0, false));
-        selectStairsVariant(dispatch, Direction.NORTH, Half.BOTTOM, StairsShape.OUTER_LEFT, stairsVariant(outer, VariantProperties.Rotation.R0, VariantProperties.Rotation.R180, true));
-
-        selectStairsVariant(dispatch, Direction.EAST, Half.BOTTOM, StairsShape.OUTER_RIGHT, stairsVariant(outer, VariantProperties.Rotation.R0, VariantProperties.Rotation.R0, false));
-        selectStairsVariant(dispatch, Direction.WEST, Half.BOTTOM, StairsShape.OUTER_RIGHT, stairsVariant(outer, VariantProperties.Rotation.R0, VariantProperties.Rotation.R180, true));
-        selectStairsVariant(dispatch, Direction.SOUTH, Half.BOTTOM, StairsShape.OUTER_RIGHT, stairsVariant(outer, VariantProperties.Rotation.R0, VariantProperties.Rotation.R90, true));
-        selectStairsVariant(dispatch, Direction.NORTH, Half.BOTTOM, StairsShape.OUTER_RIGHT, stairsVariant(outer, VariantProperties.Rotation.R0, VariantProperties.Rotation.R270, true));
-
-        // Top half
-        selectStairsVariant(dispatch, Direction.EAST, Half.TOP, StairsShape.STRAIGHT, stairsVariant(straight, VariantProperties.Rotation.R180, VariantProperties.Rotation.R0, true));
-        selectStairsVariant(dispatch, Direction.WEST, Half.TOP, StairsShape.STRAIGHT, stairsVariant(straight, VariantProperties.Rotation.R180, VariantProperties.Rotation.R180, true));
-        selectStairsVariant(dispatch, Direction.SOUTH, Half.TOP, StairsShape.STRAIGHT, stairsVariant(straight, VariantProperties.Rotation.R180, VariantProperties.Rotation.R90, true));
-        selectStairsVariant(dispatch, Direction.NORTH, Half.TOP, StairsShape.STRAIGHT, stairsVariant(straight, VariantProperties.Rotation.R180, VariantProperties.Rotation.R270, true));
-
-        selectStairsVariant(dispatch, Direction.EAST, Half.TOP, StairsShape.INNER_LEFT, stairsVariant(inner, VariantProperties.Rotation.R180, VariantProperties.Rotation.R0, true));
-        selectStairsVariant(dispatch, Direction.WEST, Half.TOP, StairsShape.INNER_LEFT, stairsVariant(inner, VariantProperties.Rotation.R180, VariantProperties.Rotation.R180, true));
-        selectStairsVariant(dispatch, Direction.SOUTH, Half.TOP, StairsShape.INNER_LEFT, stairsVariant(inner, VariantProperties.Rotation.R180, VariantProperties.Rotation.R90, true));
-        selectStairsVariant(dispatch, Direction.NORTH, Half.TOP, StairsShape.INNER_LEFT, stairsVariant(inner, VariantProperties.Rotation.R180, VariantProperties.Rotation.R270, true));
-
-        selectStairsVariant(dispatch, Direction.EAST, Half.TOP, StairsShape.INNER_RIGHT, stairsVariant(inner, VariantProperties.Rotation.R180, VariantProperties.Rotation.R90, true));
-        selectStairsVariant(dispatch, Direction.WEST, Half.TOP, StairsShape.INNER_RIGHT, stairsVariant(inner, VariantProperties.Rotation.R180, VariantProperties.Rotation.R270, true));
-        selectStairsVariant(dispatch, Direction.SOUTH, Half.TOP, StairsShape.INNER_RIGHT, stairsVariant(inner, VariantProperties.Rotation.R180, VariantProperties.Rotation.R180, true));
-        selectStairsVariant(dispatch, Direction.NORTH, Half.TOP, StairsShape.INNER_RIGHT, stairsVariant(inner, VariantProperties.Rotation.R180, VariantProperties.Rotation.R0, true));
-
-        selectStairsVariant(dispatch, Direction.EAST, Half.TOP, StairsShape.OUTER_LEFT, stairsVariant(outer, VariantProperties.Rotation.R180, VariantProperties.Rotation.R0, true));
-        selectStairsVariant(dispatch, Direction.WEST, Half.TOP, StairsShape.OUTER_LEFT, stairsVariant(outer, VariantProperties.Rotation.R180, VariantProperties.Rotation.R180, true));
-        selectStairsVariant(dispatch, Direction.SOUTH, Half.TOP, StairsShape.OUTER_LEFT, stairsVariant(outer, VariantProperties.Rotation.R180, VariantProperties.Rotation.R90, true));
-        selectStairsVariant(dispatch, Direction.NORTH, Half.TOP, StairsShape.OUTER_LEFT, stairsVariant(outer, VariantProperties.Rotation.R180, VariantProperties.Rotation.R270, true));
-
-        selectStairsVariant(dispatch, Direction.EAST, Half.TOP, StairsShape.OUTER_RIGHT, stairsVariant(outer, VariantProperties.Rotation.R180, VariantProperties.Rotation.R90, true));
-        selectStairsVariant(dispatch, Direction.WEST, Half.TOP, StairsShape.OUTER_RIGHT, stairsVariant(outer, VariantProperties.Rotation.R180, VariantProperties.Rotation.R270, true));
-        selectStairsVariant(dispatch, Direction.SOUTH, Half.TOP, StairsShape.OUTER_RIGHT, stairsVariant(outer, VariantProperties.Rotation.R180, VariantProperties.Rotation.R180, true));
-        selectStairsVariant(dispatch, Direction.NORTH, Half.TOP, StairsShape.OUTER_RIGHT, stairsVariant(outer, VariantProperties.Rotation.R180, VariantProperties.Rotation.R0, true));
-
-        return MultiVariantGenerator.multiVariant(block).with(dispatch);
     }
 
-    private static void selectStairsVariant(
-            PropertyDispatch.C4<Direction, Half, StairsShape, Boolean> dispatch,
-            Direction facing,
-            Half half,
-            StairsShape shape,
-            Variant variant
-    ) {
-        dispatch.select(facing, half, shape, false, variant);
-        dispatch.select(facing, half, shape, true, variant);
-    }
-
-    private static Variant stairsVariant(
-            ResourceLocation model,
-            VariantProperties.Rotation xRot,
-            VariantProperties.Rotation yRot,
-            boolean uvLock
-    ) {
-        Variant variant = Variant.variant().with(VariantProperties.MODEL, model);
-        if (xRot != VariantProperties.Rotation.R0) {
-            variant = variant.with(VariantProperties.X_ROT, xRot);
-        }
-        if (yRot != VariantProperties.Rotation.R0) {
-            variant = variant.with(VariantProperties.Y_ROT, yRot);
-        }
-        if (uvLock) {
-            variant = variant.with(VariantProperties.UV_LOCK, true);
-        }
-        return variant;
-    }
-
-    public static BlockStateGenerator createAxisAlignedPillarBlock(Block block, ResourceLocation modelLocation) {
-        return BlockModelGenerators.createAxisAlignedPillarBlock(block, modelLocation);
-    }
-
-    public static BlockStateGenerator createPressurePlate(
+    public static BlockModelDefinitionGenerator createStairs(
             Block block,
-            ResourceLocation up,
-            ResourceLocation down
+            Identifier inner,
+            Identifier straight,
+            Identifier outer
     ) {
-        return BlockModelGenerators.createPressurePlate(block, up, down);
+        return BlockModelGenerators.createStairs(
+                block,
+                BlockModelGenerators.plainVariant(inner),
+                BlockModelGenerators.plainVariant(straight),
+                BlockModelGenerators.plainVariant(outer)
+        );
     }
 
-    public static BlockStateGenerator createSlab(
+    public static BlockModelDefinitionGenerator createAxisAlignedPillarBlock(Block block, Identifier modelLocation) {
+        return BlockModelGenerators.createAxisAlignedPillarBlock(block, BlockModelGenerators.plainVariant(modelLocation));
+    }
+
+    public static BlockModelDefinitionGenerator createPressurePlate(
             Block block,
-            ResourceLocation bottom,
-            ResourceLocation top,
-            ResourceLocation fullBlock
+            Identifier up,
+            Identifier down
     ) {
-        return BlockModelGenerators.createSlab(block, bottom, top, fullBlock);
+        return BlockModelGenerators.createPressurePlate(
+                block,
+                BlockModelGenerators.plainVariant(up),
+                BlockModelGenerators.plainVariant(down)
+        );
+    }
+
+    public static BlockModelDefinitionGenerator createSlab(
+            Block block,
+            Identifier bottom,
+            Identifier top,
+            Identifier fullBlock
+    ) {
+        return BlockModelGenerators.createSlab(
+                block,
+                BlockModelGenerators.plainVariant(bottom),
+                BlockModelGenerators.plainVariant(top),
+                BlockModelGenerators.plainVariant(fullBlock)
+        );
     }
 }

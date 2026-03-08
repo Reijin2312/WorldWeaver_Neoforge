@@ -61,7 +61,9 @@ public class PresetRegistryImpl {
     }
 
     public static void bootstrapWorldPresetTags(TagBootstrapContext<WorldPreset> context) {
-        context.add(
+        // Optional tag entries avoid hard registry failures if a preset was not
+        // materialized by another bootstrap path in the current runtime.
+        context.addOptional(
                 WorldPresetTags.NORMAL,
                 WorldPresets.WOVER_WORLD,
                 WorldPresets.WOVER_WORLD_AMPLIFIED,

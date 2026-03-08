@@ -9,7 +9,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.dedicated.DedicatedServerProperties;
 import net.minecraft.world.level.levelgen.WorldDimensions;
 import net.minecraft.world.level.levelgen.presets.WorldPreset;
@@ -55,21 +55,21 @@ public class WorldDimensionDataMixin {
 
     @NotNull
     private Holder<WorldPreset> wover_getWorldPreset(RegistryAccess registryAccess) {
-        Registry<WorldPreset> worldPresetRegistry = registryAccess.registryOrThrow(Registries.WORLD_PRESET);
-        Holder.Reference<WorldPreset> reference = worldPresetRegistry.getHolder(WorldPresets.NORMAL)
-                                                                     .or(() -> worldPresetRegistry.holders().findAny())
+        Registry<WorldPreset> worldPresetRegistry = registryAccess.lookupOrThrow(Registries.WORLD_PRESET);
+        Holder.Reference<WorldPreset> reference = worldPresetRegistry.get(WorldPresets.NORMAL)
+                                                                     .or(() -> worldPresetRegistry.listElements().findAny())
                                                                      .orElseThrow();
 
         Optional<ResourceKey<WorldPreset>> presetKey = Optional
-                .ofNullable(ResourceLocation.tryParse(this.levelType))
-                .map((resourceLocation) -> ResourceKey.create(
+                .ofNullable(Identifier.tryParse(this.levelType))
+                .map((Identifier) -> ResourceKey.create(
                         Registries.WORLD_PRESET,
-                        resourceLocation
+                        Identifier
                 ))
                 .or(() -> Optional.ofNullable(LEGACY_PRESET_NAMES.get(this.levelType)));
         Objects.requireNonNull(worldPresetRegistry);
         Holder<WorldPreset> holder = presetKey
-                .flatMap(worldPresetRegistry::getHolder)
+                .flatMap(worldPresetRegistry::get)
                 .orElse(reference);
         return holder;
     }

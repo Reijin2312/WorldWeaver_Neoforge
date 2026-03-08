@@ -108,10 +108,10 @@ public class StructureSetBuilder {
 
     private StructureSet build() {
         if (structures.isEmpty()) {
-            throw new IllegalStateException("StructureSet " + key.location() + " must contain at least one structure");
+            throw new IllegalStateException("StructureSet " + key.identifier() + " must contain at least one structure");
         }
         if (placement == null) {
-            throw new IllegalStateException("StructureSet " + key.location() + " define a placement");
+            throw new IllegalStateException("StructureSet " + key.identifier() + " define a placement");
         }
 
         final HolderGetter<Structure> structureRegistry = context.lookup(Registries.STRUCTURE);
@@ -176,7 +176,7 @@ public class StructureSetBuilder {
             frequency = 1.0f;
             exclusionZone = Optional.empty();
 
-            salt = Math.abs(baseKey.location().hashCode());
+            salt = Math.abs(baseKey.identifier().hashCode());
         }
     }
 

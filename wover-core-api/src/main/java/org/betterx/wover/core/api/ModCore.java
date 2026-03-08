@@ -4,7 +4,7 @@ import de.ambertation.wunderlib.utils.Version;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.PackLocationInfo;
 import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.PackSelectionConfig;
@@ -61,7 +61,7 @@ public final class ModCore implements Version.ModVersionProvider {
 
     public final ModContainer modContainer;
 
-    private record DatapackInfo(ResourceLocation id, DatapackActivationType activationType) {
+    private record DatapackInfo(Identifier id, DatapackActivationType activationType) {
     }
 
     private ModCore(String modID, String namespace) {
@@ -119,47 +119,47 @@ public final class ModCore implements Version.ModVersionProvider {
     }
 
     /**
-     * Returns the {@link ResourceLocation} for the given name in the namespace of this mod.
+     * Returns the {@link Identifier} for the given name in the namespace of this mod.
      * <p>
-     * You should always prefer this method over {@link ResourceLocation#fromNamespaceAndPath(String, String)}.
+     * You should always prefer this method over {@link Identifier#fromNamespaceAndPath(String, String)}.
      *
      * @param name The name or path of the resource.
-     * @return The {@link ResourceLocation} for the given name.
+     * @return The {@link Identifier} for the given name.
      */
-    public ResourceLocation id(String name) {
-        return ResourceLocation.fromNamespaceAndPath(namespace, name);
+    public Identifier id(String name) {
+        return Identifier.fromNamespaceAndPath(namespace, name);
     }
 
 
     /**
-     * Returns the {@link ResourceLocation} for the given path in the namespace of this mod.
+     * Returns the {@link Identifier} for the given path in the namespace of this mod.
      *
-     * @param location The {@link ResourceLocation} to convert.
-     * @return The {@link ResourceLocation} for the given path in the namespace of this Mod.
+     * @param location The {@link Identifier} to convert.
+     * @return The {@link Identifier} for the given path in the namespace of this Mod.
      */
-    public ResourceLocation convertNamespace(ResourceLocation location) {
+    public Identifier convertNamespace(Identifier location) {
         return id(location.getPath());
     }
 
     /**
-     * Returns the {@link ResourceLocation} for the given path in the namespace of this mod.
+     * Returns the {@link Identifier} for the given path in the namespace of this mod.
      *
      * @param key The {@link ResourceKey} to convert.
-     * @return The {@link ResourceLocation} for the given path in the namespace of this Mod.
+     * @return The {@link Identifier} for the given path in the namespace of this Mod.
      */
-    public <T> ResourceLocation convertNamespace(ResourceKey<T> key) {
-        return convertNamespace(key.location());
+    public <T> Identifier convertNamespace(ResourceKey<T> key) {
+        return convertNamespace(key.identifier());
     }
 
     /**
      * alias for {@link #id(String)}
      *
      * @param key The name or path of the resource.
-     * @return The {@link ResourceLocation} for the given name.
+     * @return The {@link Identifier} for the given name.
      */
     @Override
-    public ResourceLocation mk(String key) {
-        return ResourceLocation.fromNamespaceAndPath(namespace, key);
+    public Identifier mk(String key) {
+        return Identifier.fromNamespaceAndPath(namespace, key);
     }
 
     /**
@@ -172,23 +172,23 @@ public final class ModCore implements Version.ModVersionProvider {
     }
 
     /**
-     * Returns a stream of all Datapacks {@link ResourceLocation}s that are provided by this mod.
+     * Returns a stream of all Datapacks {@link Identifier}s that are provided by this mod.
      *
-     * @return a stream of all Datapacks {@link ResourceLocation}s that are provided by this mod.
+     * @return a stream of all Datapacks {@link Identifier}s that are provided by this mod.
      */
-    public Stream<ResourceLocation> providedDatapacks() {
+    public Stream<Identifier> providedDatapacks() {
         return providedDatapacks.stream().map(DatapackInfo::id);
     }
 
     /**
-     * Register a Datapack {@link ResourceLocation} that is provided by this mod.
+     * Register a Datapack {@link Identifier} that is provided by this mod.
      *
      * @param name           The name of the Datapack.
      * @param activationType The {@link DatapackActivationType} of the Datapack.
-     * @return The {@link ResourceLocation} of the Datapack.
+     * @return The {@link Identifier} of the Datapack.
      */
-    public ResourceLocation addDatapack(String name, DatapackActivationType activationType) {
-        final ResourceLocation id = id(name);
+    public Identifier addDatapack(String name, DatapackActivationType activationType) {
+        final Identifier id = id(name);
         providedDatapacks.add(new DatapackInfo(id, activationType));
         return id;
     }
@@ -257,27 +257,43 @@ public final class ModCore implements Version.ModVersionProvider {
     }
 
     private static Path resolvePackRoot(IModFile modFile, String packId) {
-        final Path root = modFile.findResource(packId);
+        final Path root = findInMod(modFile, packId);
         if (root != null && Files.exists(root.resolve("pack.mcmeta"))) {
             return root;
         }
-        final Path resourcepacks = modFile.findResource("resourcepacks", packId);
+        final Path resourcepacks = findInMod(modFile, "resourcepacks/" + packId);
         if (resourcepacks != null && Files.exists(resourcepacks.resolve("pack.mcmeta"))) {
             return resourcepacks;
         }
         return null;
     }
 
+    private static Path findInMod(IModFile modFile, String path) {
+        var contents = modFile.getContents();
+        var uri = contents.findFile(path);
+        if (uri.isPresent()) {
+            return Path.of(uri.get());
+        }
+        var base = modFile.getFilePath();
+        if (base != null && Files.isDirectory(base)) {
+            var resolved = base.resolve(path);
+            if (Files.exists(resolved)) {
+                return resolved;
+            }
+        }
+        return null;
+    }
+
     /**
-     * Register a Datapack {@link ResourceLocation} that is provided by this mod. When the dependency
+     * Register a Datapack {@link Identifier} that is provided by this mod. When the dependency
      * is not loaded, the Datapack will be registered with the {@link ResourcePackActivationType#NORMAL}
      * activation type. When the dependency is loaded, the Datapack will be registered with the
      * {@link ResourcePackActivationType#DEFAULT_ENABLED} activation type.
      *
      * @param dependency The dependency mod.
-     * @return The {@link ResourceLocation} of the Datapack.
+     * @return The {@link Identifier} of the Datapack.
      */
-    public ResourceLocation addDatapack(ModCore dependency) {
+    public Identifier addDatapack(ModCore dependency) {
         return this.addDatapack(dependency.namespace + "_extensions", dependency.isLoaded()
                 ? DatapackActivationType.DEFAULT_ENABLED
                 : DatapackActivationType.NORMAL);
@@ -319,7 +335,7 @@ public final class ModCore implements Version.ModVersionProvider {
      *
      * @param modID     The mod id of the mod.
      * @param namespace The namespace of the mod. The namespace is used to create
-     *                  {@link ResourceLocation}s in {@link #id(String)} and {@link #mk(String)}.
+     *                  {@link Identifier}s in {@link #id(String)} and {@link #mk(String)}.
      * @return The instance of {@link ModCore} for the given mod id.
      */
     public static ModCore create(String modID, String namespace) {
@@ -341,7 +357,7 @@ public final class ModCore implements Version.ModVersionProvider {
      * @return true if the game is currently running in a development environment.
      */
     public static boolean isDevEnvironment() {
-        return !FMLLoader.isProduction();
+        return !FMLLoader.getCurrent().isProduction();
     }
 
     /**
@@ -350,7 +366,7 @@ public final class ModCore implements Version.ModVersionProvider {
      * @return true if the game is currently running on the client.
      */
     public static boolean isClient() {
-        return FMLEnvironment.dist.isClient();
+        return FMLEnvironment.getDist().isClient();
     }
 
     /**
@@ -359,7 +375,7 @@ public final class ModCore implements Version.ModVersionProvider {
      * @return true if the game is currently running on the server.
      */
     public static boolean isServer() {
-        return FMLEnvironment.dist.isDedicatedServer();
+        return FMLEnvironment.getDist().isDedicatedServer();
     }
 
 }

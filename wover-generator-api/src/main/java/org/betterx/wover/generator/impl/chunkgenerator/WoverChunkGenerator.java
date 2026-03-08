@@ -21,7 +21,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.data.worldgen.SurfaceRuleData;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.chunk.ChunkGenerator;
@@ -37,7 +37,7 @@ public class WoverChunkGenerator extends NoiseBasedChunkGenerator implements
         InjectableSurfaceRules<WoverChunkGenerator>,
         EnforceableChunkGenerator<WoverChunkGenerator>,
         RebuildableFeaturesPerStep<WoverChunkGenerator> {
-    public static final ResourceLocation ID = LibWoverWorldGenerator.C.id("betterx");
+    public static final Identifier ID = LibWoverWorldGenerator.C.id("betterx");
 
     protected static final NoiseSettings NETHER_NOISE_SETTINGS_AMPLIFIED = NoiseSettings.create(0, 256, 1, 4);
     public static final ResourceKey<NoiseGeneratorSettings> AMPLIFIED_NETHER = ResourceKey.create(
@@ -133,7 +133,7 @@ public class WoverChunkGenerator extends NoiseBasedChunkGenerator implements
             Registry<LevelStem> dimensionRegistry
     ) {
         LibWoverWorldGenerator.C.log.info("Enforcing Correct Generator for " + dimensionKey
-                .location()
+                .identifier()
                 .toString() + ".");
 
         ChunkGenerator referenceGenerator = this;
@@ -162,7 +162,7 @@ public class WoverChunkGenerator extends NoiseBasedChunkGenerator implements
                 access,
                 dimensionRegistry.entrySet(),
                 referenceGenerator,
-                dimensionRegistry::get,
+                key -> dimensionRegistry.get(key).map(Holder.Reference::value).orElse(null),
                 (registry, key, stem) -> registry.register(
                         key, stem,
                         dimensionRegistry.registrationInfo(key).orElse(RegistrationInfo.BUILT_IN)
@@ -193,12 +193,13 @@ public class WoverChunkGenerator extends NoiseBasedChunkGenerator implements
     }
 
     @Override
-    public void wover_injectSurfaceRules(Registry<LevelStem> dimensionRegistry, ResourceKey<LevelStem> dimensionKey) {
+    public void wover_injectSurfaceRules(Object dimensionRegistry, String dimensionKey) {
+        if (dimensionKey == null) return;
+        ResourceKey<LevelStem> key = ResourceKey.create(Registries.LEVEL_STEM, Identifier.parse(dimensionKey));
         SurfaceRuleUtil.injectNoiseBasedSurfaceRules(
-                dimensionKey,
+                key,
                 generatorSettings(),
                 this.getBiomeSource()
         );
     }
 }
-

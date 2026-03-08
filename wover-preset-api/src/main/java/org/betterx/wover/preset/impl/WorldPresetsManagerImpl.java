@@ -7,12 +7,11 @@ import org.betterx.wover.preset.api.event.OnBootstrapWorldPresets;
 import org.betterx.wover.preset.mixin.WorldPresetAccessor;
 
 import net.minecraft.core.Holder;
-import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.levelgen.WorldDimensions;
 import net.minecraft.world.level.levelgen.presets.WorldPreset;
@@ -26,22 +25,26 @@ public class WorldPresetsManagerImpl {
             "BOOTSTRAP_WORLD_PRESETS");
     private static ResourceKey<WorldPreset> DEFAULT = net.minecraft.world.level.levelgen.presets.WorldPresets.NORMAL;
     private static int currentDefaultPriority = Integer.MIN_VALUE;
+    private static boolean initialized = false;
 
     public static Holder<WorldPreset> get(RegistryAccess access, ResourceKey<WorldPreset> key) {
         return access == null ? null : access
-                .registryOrThrow(Registries.WORLD_PRESET)
-                .getHolderOrThrow(key);
+                .lookupOrThrow(Registries.WORLD_PRESET)
+                .getOrThrow(key);
     }
 
     @ApiStatus.Internal
     public static void initialize() {
+        if (initialized) return;
+        initialized = true;
+
         DatapackRegistryBuilder.addBootstrap(
                 Registries.WORLD_PRESET,
                 WorldPresetsManagerImpl::onBootstrap
         );
     }
 
-    public static ResourceKey<WorldPreset> createKey(ResourceLocation loc) {
+    public static ResourceKey<WorldPreset> createKey(Identifier loc) {
         return ResourceKey.create(Registries.WORLD_PRESET, loc);
     }
 

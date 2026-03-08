@@ -2,7 +2,7 @@ package org.betterx.wover.complex.api.equipment;
 
 import org.betterx.wover.complex.api.equipment.ArmorTier.ArmorValues;
 
-import net.minecraft.world.item.ArmorMaterials;
+import net.minecraft.world.item.equipment.ArmorMaterials;
 
 public class ArmorTiers {
     public static ArmorTier LEATHER_ARMOR = ArmorTier
@@ -19,7 +19,7 @@ public class ArmorTiers {
 
     public static ArmorTier CHAINMAIL_ARMOR = ArmorTier
             .builder("chainmail")
-            .armorMaterial(ArmorMaterials.CHAIN)
+            .armorMaterial(ArmorMaterials.CHAINMAIL)
             .allArmorValues(new ArmorValues(15))
             .build();
 
@@ -43,7 +43,7 @@ public class ArmorTiers {
 
     public static ArmorTier TURTLE_ARMOR = ArmorTier
             .builder("turtle")
-            .armorMaterial(ArmorMaterials.TURTLE)
+            .armorMaterial(ArmorMaterials.TURTLE_SCUTE)
             .allArmorValues(new ArmorValues(25))
             .build();
 }

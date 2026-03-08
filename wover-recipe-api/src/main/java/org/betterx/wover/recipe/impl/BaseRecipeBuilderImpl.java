@@ -3,14 +3,18 @@ package org.betterx.wover.recipe.impl;
 import org.betterx.wover.recipe.api.BaseRecipeBuilder;
 
 import net.minecraft.advancements.Criterion;
-import net.minecraft.advancements.critereon.InventoryChangeTrigger;
+import net.minecraft.advancements.criterion.InventoryChangeTrigger;
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.data.recipes.RecipeCategory;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.Block;
 
@@ -26,13 +30,13 @@ public abstract class BaseRecipeBuilderImpl<I extends BaseRecipeBuilder<I>> impl
     protected String group;
     protected boolean shouldUnlockAdvancements;
     protected final @NotNull ItemStack output;
-    protected final @NotNull ResourceLocation id;
+    protected final @NotNull Identifier id;
 
-    protected BaseRecipeBuilderImpl(@NotNull ResourceLocation id, @NotNull ItemLike output) {
+    protected BaseRecipeBuilderImpl(@NotNull Identifier id, @NotNull ItemLike output) {
         this(id, new ItemStack(output, 1));
     }
 
-    protected BaseRecipeBuilderImpl(@NotNull ResourceLocation id, @NotNull ItemStack output) {
+    protected BaseRecipeBuilderImpl(@NotNull Identifier id, @NotNull ItemStack output) {
         this.id = id;
         this.category = RecipeCategory.MISC;
         this.output = output;
@@ -85,6 +89,27 @@ public abstract class BaseRecipeBuilderImpl<I extends BaseRecipeBuilder<I>> impl
         );
 
         return (I) this;
+    }
+
+    protected I unlockedBy(Ingredient ingredient) {
+        ItemLike[] items = ingredient.items().map(Holder::value).toArray(ItemLike[]::new);
+        if (items.length > 0) {
+            unlockedBy(items);
+        }
+        return (I) this;
+    }
+
+    protected static Ingredient ingredientOf(TagKey<Item> tag) {
+        var lookup = WoverRecipeProviderAccess.itemLookup();
+        if (lookup.get(tag).isPresent()) {
+            return Ingredient.of(lookup.getOrThrow(tag));
+        }
+
+        return Ingredient.of(BuiltInRegistries.ITEM.getOrThrow(tag));
+    }
+
+    protected static ResourceKey<Recipe<?>> recipeKey(Identifier id) {
+        return ResourceKey.create(Registries.RECIPE, id);
     }
 
     /**

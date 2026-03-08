@@ -1,11 +1,13 @@
 package org.betterx.wover.item.api.smithing;
 
 import org.betterx.wover.core.api.ModCore;
+import org.betterx.wover.item.api.ItemRegistry;
 
 import net.minecraft.ChatFormatting;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.SmithingTemplateItem;
 
 import org.spongepowered.include.com.google.common.collect.ImmutableList;
@@ -16,20 +18,20 @@ public class SmithingTemplates {
     public static final ChatFormatting TITLE_FORMAT = ChatFormatting.GRAY;
     public static final ChatFormatting DESCRIPTION_FORMAT = ChatFormatting.BLUE;
 
-    public static final ResourceLocation EMPTY_SLOT_HELMET = ResourceLocation.withDefaultNamespace("item/empty_armor_slot_helmet");
-    public static final ResourceLocation EMPTY_SLOT_CHESTPLATE = ResourceLocation.withDefaultNamespace("item/empty_armor_slot_chestplate");
-    public static final ResourceLocation EMPTY_SLOT_LEGGINGS = ResourceLocation.withDefaultNamespace("item/empty_armor_slot_leggings");
-    public static final ResourceLocation EMPTY_SLOT_BOOTS = ResourceLocation.withDefaultNamespace("item/empty_armor_slot_boots");
-    public static final ResourceLocation EMPTY_SLOT_HOE = ResourceLocation.withDefaultNamespace("item/empty_slot_hoe");
-    public static final ResourceLocation EMPTY_SLOT_AXE = ResourceLocation.withDefaultNamespace("item/empty_slot_axe");
-    public static final ResourceLocation EMPTY_SLOT_SWORD = ResourceLocation.withDefaultNamespace("item/empty_slot_sword");
-    public static final ResourceLocation EMPTY_SLOT_SHOVEL = ResourceLocation.withDefaultNamespace("item/empty_slot_shovel");
-    public static final ResourceLocation EMPTY_SLOT_PICKAXE = ResourceLocation.withDefaultNamespace("item/empty_slot_pickaxe");
-    public static final ResourceLocation EMPTY_SLOT_INGOT = ResourceLocation.withDefaultNamespace("item/empty_slot_ingot");
-    public static final ResourceLocation EMPTY_SLOT_REDSTONE_DUST = ResourceLocation.withDefaultNamespace("item/empty_slot_redstone_dust");
-    public static final ResourceLocation EMPTY_SLOT_DIAMOND = ResourceLocation.withDefaultNamespace("item/empty_slot_diamond");
+    public static final Identifier EMPTY_SLOT_HELMET = Identifier.withDefaultNamespace("container/slot/helmet");
+    public static final Identifier EMPTY_SLOT_CHESTPLATE = Identifier.withDefaultNamespace("container/slot/chestplate");
+    public static final Identifier EMPTY_SLOT_LEGGINGS = Identifier.withDefaultNamespace("container/slot/leggings");
+    public static final Identifier EMPTY_SLOT_BOOTS = Identifier.withDefaultNamespace("container/slot/boots");
+    public static final Identifier EMPTY_SLOT_HOE = Identifier.withDefaultNamespace("container/slot/hoe");
+    public static final Identifier EMPTY_SLOT_AXE = Identifier.withDefaultNamespace("container/slot/axe");
+    public static final Identifier EMPTY_SLOT_SWORD = Identifier.withDefaultNamespace("container/slot/sword");
+    public static final Identifier EMPTY_SLOT_SHOVEL = Identifier.withDefaultNamespace("container/slot/shovel");
+    public static final Identifier EMPTY_SLOT_PICKAXE = Identifier.withDefaultNamespace("container/slot/pickaxe");
+    public static final Identifier EMPTY_SLOT_INGOT = Identifier.withDefaultNamespace("container/slot/ingot");
+    public static final Identifier EMPTY_SLOT_REDSTONE_DUST = Identifier.withDefaultNamespace("container/slot/redstone_dust");
+    public static final Identifier EMPTY_SLOT_DIAMOND = Identifier.withDefaultNamespace("container/slot/diamond");
 
-    public static final List<ResourceLocation> TOOLS = List.of(
+    public static final List<Identifier> TOOLS = List.of(
             EMPTY_SLOT_SWORD,
             EMPTY_SLOT_PICKAXE,
             EMPTY_SLOT_AXE,
@@ -37,16 +39,16 @@ public class SmithingTemplates {
             EMPTY_SLOT_SHOVEL
     );
 
-    public static final List<ResourceLocation> ARMOR = List.of(
+    public static final List<Identifier> ARMOR = List.of(
             EMPTY_SLOT_HELMET,
             EMPTY_SLOT_CHESTPLATE,
             EMPTY_SLOT_LEGGINGS,
             EMPTY_SLOT_BOOTS
     );
-    public static final List<ResourceLocation> ARMOR_AND_TOOLS = combine(ARMOR, TOOLS);
+    public static final List<Identifier> ARMOR_AND_TOOLS = combine(ARMOR, TOOLS);
 
-    public static List<ResourceLocation> combine(List<ResourceLocation>... sources) {
-        final ImmutableList.Builder<ResourceLocation> builder = ImmutableList.builder();
+    public static List<Identifier> combine(List<Identifier>... sources) {
+        final ImmutableList.Builder<Identifier> builder = ImmutableList.builder();
         for (var s : sources) {
             builder.addAll(s);
         }
@@ -60,20 +62,20 @@ public class SmithingTemplates {
     public static class Builder {
         private final ModCore C;
         private final String path;
-        private List<ResourceLocation> baseSlotEmptyIcons;
-        private List<ResourceLocation> additionalSlotEmptyIcons;
+        private List<Identifier> baseSlotEmptyIcons;
+        private List<Identifier> additionalSlotEmptyIcons;
 
         private Builder(ModCore modCore, String path) {
             this.C = modCore;
             this.path = path;
         }
 
-        public Builder setBaseSlotEmptyIcons(List<ResourceLocation> baseSlotEmptyIcons) {
+        public Builder setBaseSlotEmptyIcons(List<Identifier> baseSlotEmptyIcons) {
             this.baseSlotEmptyIcons = baseSlotEmptyIcons;
             return this;
         }
 
-        public Builder setAdditionalSlotEmptyIcons(List<ResourceLocation> additionalSlotEmptyIcons) {
+        public Builder setAdditionalSlotEmptyIcons(List<Identifier> additionalSlotEmptyIcons) {
             this.additionalSlotEmptyIcons = additionalSlotEmptyIcons;
             return this;
         }
@@ -86,39 +88,41 @@ public class SmithingTemplates {
                 throw new IllegalStateException("Additional slot empty icons must contain at least one icon");
             }
 
+            Item.Properties properties = new Item.Properties();
+            var pendingId = ItemRegistry.peekConstructionId();
+            if (pendingId != null) {
+                properties.setId(pendingId);
+            }
 
             return new SmithingTemplateItem(
                     Component.translatable(Util.makeDescriptionId(
                             "item",
-                            ResourceLocation.fromNamespaceAndPath(C.namespace, "smithing_template." + path + ".applies_to")
+                            Identifier.fromNamespaceAndPath(C.namespace, "smithing_template." + path + ".applies_to")
                     )).withStyle(DESCRIPTION_FORMAT),
                     Component.translatable(Util.makeDescriptionId(
                             "item",
-                            ResourceLocation.fromNamespaceAndPath(
+                            Identifier.fromNamespaceAndPath(
                                     C.namespace,
                                     "smithing_template." + path + ".ingredients"
                             )
                     )).withStyle(DESCRIPTION_FORMAT),
                     Component.translatable(Util.makeDescriptionId(
-                            "upgrade",
-                            C.mk(path)
-                    )).withStyle(TITLE_FORMAT),
-                    Component.translatable(Util.makeDescriptionId(
                             "item",
-                            ResourceLocation.fromNamespaceAndPath(
+                            Identifier.fromNamespaceAndPath(
                                     C.namespace,
                                     "smithing_template." + path + ".base_slot_description"
                             )
                     )),
                     Component.translatable(Util.makeDescriptionId(
                             "item",
-                            ResourceLocation.fromNamespaceAndPath(
+                            Identifier.fromNamespaceAndPath(
                                     C.namespace,
                                     "smithing_template." + path + ".additions_slot_description"
                             )
                     )),
                     baseSlotEmptyIcons,
-                    additionalSlotEmptyIcons
+                    additionalSlotEmptyIcons,
+                    properties
             );
         }
     }

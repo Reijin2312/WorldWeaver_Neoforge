@@ -15,7 +15,7 @@ public interface AsSequence extends FeatureConfigurator<SequenceFeatureConfig, S
      * Adds a feature to the sequence.
      *
      * @param featureKey The feature to add. A {@link PlacedFeatureKey} can be created using
-     *                   {@link org.betterx.wover.feature.api.placed.PlacedFeatureManager#createKey(net.minecraft.resources.ResourceLocation)}
+     *                   {@link org.betterx.wover.feature.api.placed.PlacedFeatureManager#createKey(net.minecraft.resources.Identifier)}
      * @return the same instance
      */
     AsSequence add(PlacedFeatureKey featureKey);

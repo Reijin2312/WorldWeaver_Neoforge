@@ -1,7 +1,6 @@
 package org.betterx.wover.surface.mixin;
 
 import org.betterx.wover.common.surface.api.SurfaceRuleProvider;
-import org.betterx.wover.entrypoint.LibWoverSurface;
 
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 import net.minecraft.world.level.levelgen.SurfaceRules;
@@ -21,7 +20,7 @@ public abstract class NoiseGeneratorSettingsMixin implements SurfaceRuleProvider
     public void wover_overwriteSurfaceRules(SurfaceRules.RuleSource surfaceRule) {
         if (surfaceRule == null || surfaceRule == this.surfaceRule) return;
         if (this.wover_containsOverride) {
-            LibWoverSurface.C.LOG.warn("Overwriting an overwritten set of Surface Rules.");
+            // Avoid referencing split module entrypoint/loggers from injected MC code in datagen/dev.
         }
         this.wover_containsOverride = true;
         this.surfaceRule = surfaceRule;

@@ -6,7 +6,7 @@ import org.betterx.wover.datagen.api.WoverDataGenEntryPoint;
 import org.betterx.wover.testmod.entrypoint.TestModWoverSurface;
 
 import net.minecraft.data.PackOutput;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import net.neoforged.neoforge.data.event.GatherDataEvent;
 
@@ -30,7 +30,7 @@ public class TestModWoverSurfaceDatagen extends WoverDataGenEntryPoint {
     void onInitializeAddonDatapack(
             GatherDataEvent event,
             PackOutput packOutput,
-            ResourceLocation location
+            Identifier location
     ) {
         modCore().log.info("Initializing addon datapack: " + location);
     }

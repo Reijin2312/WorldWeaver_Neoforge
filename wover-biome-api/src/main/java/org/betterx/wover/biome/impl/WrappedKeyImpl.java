@@ -5,12 +5,12 @@ import org.betterx.wover.biome.api.builder.BiomeBootstrapContext;
 import org.betterx.wover.biome.api.builder.BiomeBuilder;
 import org.betterx.wover.biome.impl.builder.WrappedBiomeBuilderImpl;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import org.jetbrains.annotations.NotNull;
 
 public class WrappedKeyImpl extends BiomeKey<BiomeBuilder.Wrapped> {
-    protected WrappedKeyImpl(@NotNull ResourceLocation location) {
+    protected WrappedKeyImpl(@NotNull Identifier location) {
         super(location);
     }
 

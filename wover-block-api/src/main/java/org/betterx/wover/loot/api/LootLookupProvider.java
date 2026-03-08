@@ -2,7 +2,7 @@ package org.betterx.wover.loot.api;
 
 import org.betterx.wover.tag.api.predefined.CommonItemTags;
 
-import net.minecraft.advancements.critereon.*;
+import net.minecraft.advancements.criterion.*;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
@@ -47,6 +47,10 @@ public class LootLookupProvider {
         return vanillaBlockLoot.hasSilkTouch();
     }
 
+    private static boolean isAir(ItemLike itemLike) {
+        return itemLike == null || itemLike.asItem() == Items.AIR;
+    }
+
     public record DropInfo(ItemLike item, NumberProvider numberProvider) {
         public DropInfo(ItemLike item, int count) {
             this(item, ConstantValue.exactly(count));
@@ -80,17 +84,15 @@ public class LootLookupProvider {
     }
 
     public LootItemCondition.Builder silkTouchCondition() {
-        return MatchTool.toolMatches(ItemPredicate.Builder
-                .item()
-                .withSubPredicate(ItemSubPredicates.ENCHANTMENTS, ItemEnchantmentsPredicate.enchantments(List.of(new EnchantmentPredicate(silkTouch(), MinMaxBounds.Ints.atLeast(1))))));
+        return vanillaBlockLoot.hasSilkTouch();
     }
 
     public LootItemCondition.Builder shearsCondition() {
-        return MatchTool.toolMatches(ItemPredicate.Builder.item().of(CommonItemTags.SHEARS));
+        return MatchTool.toolMatches(ItemPredicate.Builder.item().of(provider.lookupOrThrow(Registries.ITEM), CommonItemTags.SHEARS));
     }
 
     public LootItemCondition.Builder hoeCondition() {
-        return MatchTool.toolMatches(ItemPredicate.Builder.item().of(ItemTags.HOES));
+        return MatchTool.toolMatches(ItemPredicate.Builder.item().of(provider.lookupOrThrow(Registries.ITEM), ItemTags.HOES));
     }
 
     public LootItemCondition.Builder shearsOrHoeSilkTouchCondition() {
@@ -108,6 +110,9 @@ public class LootLookupProvider {
     public LootTable.Builder dropWithSilkTouch(
             ItemLike withSilkTouch
     ) {
+        if (isAir(withSilkTouch)) {
+            return LootTable.lootTable();
+        }
         return vanillaBlockLoot.createSilkTouchOnlyTable(withSilkTouch);
 //        return LootTable
 //                .lootTable()
@@ -128,6 +133,9 @@ public class LootLookupProvider {
             ItemLike withSilkTouch,
             NumberProvider rolls
     ) {
+        if (isAir(withSilkTouch)) {
+            return LootTable.lootTable();
+        }
         return LootTable
                 .lootTable()
                 .withPool(LootPool
@@ -141,6 +149,9 @@ public class LootLookupProvider {
     public LootTable.Builder dropWithSilkTouchOrShears(
             ItemLike withSilkTouch
     ) {
+        if (isAir(withSilkTouch)) {
+            return LootTable.lootTable();
+        }
         return LootTable
                 .lootTable()
                 .withPool(LootPool
@@ -189,6 +200,10 @@ public class LootLookupProvider {
 
 
     public LootTable.Builder drop(ItemLike block) {
+        // Some technical/datagen-only blocks are intentionally itemless.
+        if (block.asItem() == Items.AIR) {
+            return LootTable.lootTable();
+        }
         return vanillaBlockLoot.createSingleItemTable(block);
     }
 
@@ -243,7 +258,7 @@ public class LootLookupProvider {
                         LootItem.lootTableItem(withoutSilkTouch)
                                 .when(LootItemBlockStatePropertyCondition
                                         .hasBlockStateProperties(withSilkTouch)
-                                        .setProperties(net.minecraft.advancements.critereon.StatePropertiesPredicate.Builder
+                                        .setProperties(net.minecraft.advancements.criterion.StatePropertiesPredicate.Builder
                                                 .properties()
                                                 .hasProperty(property, comparable))
                                 )
@@ -265,7 +280,7 @@ public class LootLookupProvider {
                         .add(LootItem.lootTableItem(withSilkTouch)
                                      .when(LootItemBlockStatePropertyCondition
                                              .hasBlockStateProperties(withSilkTouch)
-                                             .setProperties(net.minecraft.advancements.critereon.StatePropertiesPredicate.Builder
+                                             .setProperties(net.minecraft.advancements.criterion.StatePropertiesPredicate.Builder
                                                      .properties()
                                                      .hasProperty(property, comparable))
                                      )

@@ -4,8 +4,6 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.data.DataProvider;
 import net.minecraft.data.PackOutput;
 
-import net.neoforged.neoforge.common.data.ExistingFileHelper;
-
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -19,13 +17,11 @@ public interface WoverDataProvider<T extends DataProvider> {
      *
      * @param output           The output to write the data to.
      * @param registriesFuture A future sent from the data generator
-     * @param existingFileHelper The existing file helper from NeoForge datagen
      * @return A new {@link DataProvider}
      */
     T getProvider(
             PackOutput output,
-            CompletableFuture<HolderLookup.Provider> registriesFuture,
-            ExistingFileHelper existingFileHelper
+            CompletableFuture<HolderLookup.Provider> registriesFuture
     );
 
     /**
@@ -39,13 +35,11 @@ public interface WoverDataProvider<T extends DataProvider> {
          *
          * @param output           The output to write the data to.
          * @param registriesFuture A future sent from the data generator
-         * @param existingFileHelper The existing file helper from NeoForge datagen
          * @return A new {@link DataProvider}
          */
         T getSecondaryProvider(
                 PackOutput output,
-                CompletableFuture<HolderLookup.Provider> registriesFuture,
-                ExistingFileHelper existingFileHelper
+                CompletableFuture<HolderLookup.Provider> registriesFuture
         );
     }
 
@@ -60,13 +54,11 @@ public interface WoverDataProvider<T extends DataProvider> {
          *
          * @param output           The output to write the data to.
          * @param registriesFuture A future sent from the data generator
-         * @param existingFileHelper The existing file helper from NeoForge datagen
          * @return A new {@link DataProvider}
          */
         T getTertiaryProvider(
                 PackOutput output,
-                CompletableFuture<HolderLookup.Provider> registriesFuture,
-                ExistingFileHelper existingFileHelper
+                CompletableFuture<HolderLookup.Provider> registriesFuture
         );
     }
 }

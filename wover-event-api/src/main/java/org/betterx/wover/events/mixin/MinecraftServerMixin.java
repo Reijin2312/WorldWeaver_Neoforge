@@ -9,8 +9,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.RegistryLayer;
 import net.minecraft.server.Services;
 import net.minecraft.server.WorldStem;
-import net.minecraft.server.level.progress.ChunkProgressListener;
-import net.minecraft.server.level.progress.ChunkProgressListenerFactory;
+import net.minecraft.server.level.progress.LevelLoadListener;
 import net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.WorldData;
@@ -55,7 +54,7 @@ public class MinecraftServerMixin {
             Proxy proxy,
             DataFixer dataFixer,
             Services services,
-            ChunkProgressListenerFactory chunkProgressListenerFactory,
+            LevelLoadListener levelLoadListener,
             CallbackInfo ci
     ) {
         //in most cases this call is redundant, as we already captured the registries from the
@@ -79,7 +78,7 @@ public class MinecraftServerMixin {
      * We need a hook here to alter surface rules after biome modifications have been applied.
      */
     @Inject(method = "createLevels", at = @At(value = "HEAD"))
-    private void wover_biomesReady(ChunkProgressListener worldGenerationProgressListener, CallbackInfo ci) {
+    private void wover_biomesReady(CallbackInfo ci) {
         //in most cases this call is redundant, as we already captured the registries from the
         // world stem, but just in case...
         WorldLifecycleImpl.WORLD_REGISTRY_READY.emit(registries.compositeAccess(), OnRegistryReady.Stage.FINAL);

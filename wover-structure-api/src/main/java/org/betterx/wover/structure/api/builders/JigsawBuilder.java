@@ -4,7 +4,7 @@ import org.betterx.wover.structure.api.pools.StructurePoolKey;
 
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.heightproviders.HeightProvider;
 import net.minecraft.world.level.levelgen.structure.pools.DimensionPadding;
@@ -20,7 +20,7 @@ public interface JigsawBuilder extends BaseStructureBuilder<JigsawStructure, Jig
 
     JigsawBuilder maxDistanceFromCenter(int value);
 
-    JigsawBuilder startJigsawName(ResourceLocation value);
+    JigsawBuilder startJigsawName(Identifier value);
 
     JigsawBuilder useExpansionHack(boolean value);
 

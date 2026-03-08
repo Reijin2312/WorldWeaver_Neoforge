@@ -14,10 +14,11 @@ import org.betterx.wover.state.api.WorldState;
 
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.WorldStem;
 import net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.tags.TagKey;
@@ -30,7 +31,6 @@ import static org.betterx.wover.events.impl.AbstractEvent.SYSTEM_PRIORITY;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import org.jetbrains.annotations.ApiStatus;
 
 public class BiomeModificationRegistryImpl {
@@ -68,19 +68,18 @@ public class BiomeModificationRegistryImpl {
 
         final RegistryAccess registryAccess = WorldState.registryAccess();
         final Registry<BiomeModification> modifications = registryAccess
-                .registry(BiomeModificationRegistry.BIOME_MODIFICATION_REGISTRY)
+                .lookup(BiomeModificationRegistry.BIOME_MODIFICATION_REGISTRY)
                 .orElse(null);
         if (modifications == null) {
             LibWoverBiome.C.log.error("Biome Modification Registry is missing. Cannot apply Biome Modifications.");
             return;
         }
-        final Registry<Biome> biomes = registryAccess.registryOrThrow(Registries.BIOME);
+        final Registry<Biome> biomes = registryAccess.lookupOrThrow(Registries.BIOME);
 
         final List<ResourceKey<Biome>> keys = biomes
-                .entrySet()
-                .stream()
-                .map(Map.Entry::getKey)
-                .sorted(Comparator.comparingInt(key -> biomes.getId(biomes.getOrThrow(key))))
+                .listElements()
+                .map(Holder.Reference::key)
+                .sorted(Comparator.comparingInt(biomes::getId))
                 .toList();
 
         final BiomeTagModificationWorker biomeTagWorker = new BiomeTagModificationWorker();
@@ -94,7 +93,7 @@ public class BiomeModificationRegistryImpl {
         for (ResourceKey<Biome> biomeKey : keys) {
             BiomePredicate.Context context = BiomePredicate.Context.of(registryAccess, biomeKey);
             if (context == null) {
-                LibWoverBiome.C.log.warn("Failed to get biome context for {}", biomeKey.location());
+                LibWoverBiome.C.log.warn("Failed to get biome context for {}", biomeKey.identifier());
                 continue;
             }
 
@@ -148,7 +147,7 @@ public class BiomeModificationRegistryImpl {
 
         if (tagsAdded > 0) {
             //We need to reload all BiomeSources, as some tags have changed
-            final Registry<LevelStem> dimensions = registryAccess.registryOrThrow(Registries.LEVEL_STEM);
+            final Registry<LevelStem> dimensions = registryAccess.lookupOrThrow(Registries.LEVEL_STEM);
             dimensions.forEach(stem -> {
                 if (stem.generator().getBiomeSource() instanceof ReloadableBiomeSource reloadable) {
                     reloadable.reloadBiomes();
@@ -159,7 +158,7 @@ public class BiomeModificationRegistryImpl {
         if (biomesProcessed > 0) {
             //We need to rebuild all feature maps, as we might have added feature that did not yet exist on any
             //of the valid biomes
-            final Registry<LevelStem> dimensions = registryAccess.registryOrThrow(Registries.LEVEL_STEM);
+            final Registry<LevelStem> dimensions = registryAccess.lookupOrThrow(Registries.LEVEL_STEM);
             dimensions.forEach(stem -> {
                 if (stem.generator() instanceof RebuildableFeaturesPerStep<?> generator) {
                     generator.wover_rebuildFeaturesPerStep();
@@ -178,7 +177,7 @@ public class BiomeModificationRegistryImpl {
     }
 
     public static ResourceKey<BiomeModification> createKey(
-            ResourceLocation modificationID
+            Identifier modificationID
     ) {
         return ResourceKey.create(
                 BiomeModificationRegistry.BIOME_MODIFICATION_REGISTRY,

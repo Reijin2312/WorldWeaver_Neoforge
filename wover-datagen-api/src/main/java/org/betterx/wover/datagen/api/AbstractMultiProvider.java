@@ -3,7 +3,7 @@ package org.betterx.wover.datagen.api;
 import org.betterx.wover.core.api.ModCore;
 import org.betterx.wover.datagen.api.provider.multi.WoverFeatureProvider;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -19,7 +19,7 @@ public abstract class AbstractMultiProvider implements WoverMultiProvider {
     /**
      * The id of the provider. Every Provider (for the same Registry) needs a unique id.
      */
-    protected final ResourceLocation providerId;
+    protected final Identifier providerId;
 
     /**
      * Creates a new instance of {@link WoverFeatureProvider}.
@@ -37,7 +37,7 @@ public abstract class AbstractMultiProvider implements WoverMultiProvider {
      * @param modCore The {@link ModCore} of the Mod.@param providerId The id of the provider. Every Provider (for the same Registry)
      *                needs a unique id.
      */
-    public AbstractMultiProvider(@NotNull ModCore modCore, @NotNull ResourceLocation providerId) {
+    public AbstractMultiProvider(@NotNull ModCore modCore, @NotNull Identifier providerId) {
         this.modCore = modCore;
         this.providerId = providerId;
     }

@@ -194,7 +194,7 @@ public enum StructurePlacement implements StringRepresentable {
             int airAtOffset
     ) {
         return findYDownward(
-                startY, ctx.heightAccessor().getMinBuildHeight() + 4,
+                startY, ctx.heightAccessor().getMinY() + 4,
                 testColumns, ctx,
                 testAir, testSurface, minMatches, airAtOffset
         );
@@ -257,8 +257,8 @@ public enum StructurePlacement implements StringRepresentable {
     public static boolean hasValidBiomeAtRandomHeight(Structure.GenerationContext ctx, int x, int z) {
         final int randomY = ctx.random()
                                .nextIntBetweenInclusive(
-                                       ctx.heightAccessor().getMinBuildHeight(),
-                                       ctx.heightAccessor().getMaxBuildHeight()
+                                       ctx.heightAccessor().getMinY(),
+                                       ctx.heightAccessor().getMaxY()
                                );
 
         return hasValidBiomeAt(ctx, x, randomY, z);

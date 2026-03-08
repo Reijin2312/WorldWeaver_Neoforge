@@ -5,10 +5,9 @@ import org.betterx.wover.events.api.client.ClientWorldLifecycle;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 
-@EventBusSubscriber(modid = "wover-events-testmod", bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+@EventBusSubscriber(modid = "wover-events-testmod", value = Dist.CLIENT)
 public class TestModWoverEventClient {
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {

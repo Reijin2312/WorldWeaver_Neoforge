@@ -12,7 +12,7 @@ import org.betterx.wover.tag.impl.TagManagerImpl;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.tags.TagsProvider;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagBuilder;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
@@ -20,8 +20,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
-
-import net.neoforged.neoforge.common.data.ExistingFileHelper;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -163,16 +161,16 @@ public abstract class WoverTagProvider<T, P extends TagBootstrapContext<T>> impl
     }
 
     /**
-     * Tests whether the given {@link ResourceLocation} should be added to the tag.
+     * Tests whether the given {@link Identifier} should be added to the tag.
      * <p>
-     * The default implementation will return true if the {@link ResourceLocation}
+     * The default implementation will return true if the {@link Identifier}
      * is included in the {@link #modIDs} list, or if the {@link #modIDs} list is
      * {@code null}.
      *
-     * @param loc the {@link ResourceLocation} to test
-     * @return {@code true} if the {@link ResourceLocation} is allowed
+     * @param loc the {@link Identifier} to test
+     * @return {@code true} if the {@link Identifier} is allowed
      */
-    protected boolean shouldAdd(ResourceLocation loc) {
+    protected boolean shouldAdd(Identifier loc) {
         return modIDs == null || modIDs.contains(loc.getNamespace());
     }
 
@@ -218,10 +216,9 @@ public abstract class WoverTagProvider<T, P extends TagBootstrapContext<T>> impl
     @Override
     public TagsProvider<T> getProvider(
             PackOutput output,
-            CompletableFuture<HolderLookup.Provider> registriesFuture,
-            ExistingFileHelper existingFileHelper
+            CompletableFuture<HolderLookup.Provider> registriesFuture
     ) {
-        return new TagsProvider<T>(output, tagRegistry.registryKey(), registriesFuture, modCore.modId, existingFileHelper) {
+        return new TagsProvider<T>(output, tagRegistry.registryKey(), registriesFuture, modCore.modId) {
             @Override
             public String getName() {
                 return getTitle() + " (" + super.getName() + ")";

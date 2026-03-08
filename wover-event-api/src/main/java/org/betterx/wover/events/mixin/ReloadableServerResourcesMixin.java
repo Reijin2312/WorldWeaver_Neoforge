@@ -6,6 +6,7 @@ import net.minecraft.commands.Commands;
 import net.minecraft.core.LayeredRegistryAccess;
 import net.minecraft.server.RegistryLayer;
 import net.minecraft.server.ReloadableServerResources;
+import net.minecraft.server.permissions.PermissionSet;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.flag.FeatureFlagSet;
 
@@ -14,6 +15,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
@@ -23,9 +25,10 @@ public class ReloadableServerResourcesMixin {
     private static void wover_onLoadResources(
             ResourceManager resourceManager,
             LayeredRegistryAccess<RegistryLayer> layeredRegistryAccess,
+            List<?> pendingTags,
             FeatureFlagSet featureFlagSet,
             Commands.CommandSelection commandSelection,
-            int i,
+            PermissionSet permissionSet,
             Executor executor,
             Executor executor2,
             CallbackInfoReturnable<CompletableFuture<ReloadableServerResources>> cir

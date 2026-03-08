@@ -4,7 +4,7 @@ import org.betterx.wover.recipe.api.CookingRecipeBuilder;
 
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.data.recipes.SimpleCookingRecipeBuilder;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.crafting.Ingredient;
@@ -18,7 +18,7 @@ public class CookingRecipeBuilderImpl extends BaseRecipeBuilderImpl<CookingRecip
     protected boolean blasting, campfire, smoker, smelting;
 
     public CookingRecipeBuilderImpl(
-            ResourceLocation id,
+            Identifier id,
             ItemLike output,
             boolean blasting,
             boolean campfire,
@@ -85,7 +85,7 @@ public class CookingRecipeBuilderImpl extends BaseRecipeBuilderImpl<CookingRecip
     }
 
     public CookingRecipeBuilder input(TagKey<Item> input) {
-        return input(Ingredient.of(input));
+        return input(ingredientOf(input));
     }
 
     public CookingRecipeBuilder input(ItemLike input) {
@@ -94,7 +94,7 @@ public class CookingRecipeBuilderImpl extends BaseRecipeBuilderImpl<CookingRecip
 
     public CookingRecipeBuilder input(Ingredient input) {
         this.input = input;
-        unlockedBy(input.getItems());
+        unlockedBy(input);
         return this;
     }
 
@@ -167,11 +167,11 @@ public class CookingRecipeBuilderImpl extends BaseRecipeBuilderImpl<CookingRecip
     }
 
     private void buildRecipe(RecipeOutput ctx, String suffix, SimpleCookingRecipeBuilder builder) {
-        ResourceLocation loc = id.withSuffix("_" + suffix);
+        Identifier loc = id.withSuffix("_" + suffix);
 
         for (var item : unlocks.entrySet()) {
             builder.unlockedBy(item.getKey(), item.getValue());
         }
-        builder.save(ctx, loc);
+        builder.save(ctx, recipeKey(loc));
     }
 }

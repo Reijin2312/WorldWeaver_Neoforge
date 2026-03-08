@@ -51,10 +51,7 @@ class ToolDescription<I extends Item> extends ItemDescription<I> {
     ) {
         if (item == null) return;
         if (tier == null) return;
-        var repair = tier.toolTier.getRepairIngredient();
-        var repairItems = repair.getItems();
-        if (repairItems.length == 0) return;
-        final ItemLike ingot = repairItems[0].getItem();
+        TagKey<Item> repairTag = tier.toolTier.repairItems();
 
         var values = tier.getValues(slot);
         if (values != null && values.smithingTemplate() != null && sourceSet != null) {
@@ -62,15 +59,15 @@ class ToolDescription<I extends Item> extends ItemDescription<I> {
                     .smithing(location, item)
                     .template(values.smithingTemplate())
                     .base(sourceSet.get(this.slot))
-                    .addon(ingot)
+                    .addon(repairTag)
                     .category(slot.category)
                     .build(ctx);
         } else {
             var builder = RecipeBuilder.crafting(location, item)
-                                       .addMaterial('#', ingot)
+                                       .addMaterial('#', repairTag)
                                        .category(RecipeCategory.TOOLS);
 
-            if (buildRecipe(item, stick, builder)) return;
+            if (buildToolRecipe(slot, stick, builder)) return;
             builder.category(slot.category).group(location.getPath()).build(ctx);
         }
     }

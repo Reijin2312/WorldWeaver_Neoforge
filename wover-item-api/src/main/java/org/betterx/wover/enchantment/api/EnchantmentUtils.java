@@ -25,8 +25,8 @@ public class EnchantmentUtils {
      */
     public static Holder<Enchantment> getEnchantment(ResourceKey<Enchantment> enchantment) {
         return WorldState.registryAccess()
-                         .registry(Registries.ENCHANTMENT)
-                         .flatMap(r -> r.getHolder(enchantment))
+                         .lookupOrThrow(Registries.ENCHANTMENT)
+                         .get(enchantment)
                          .orElse(null);
     }
 
@@ -40,8 +40,8 @@ public class EnchantmentUtils {
     public static Holder<Enchantment> getEnchantment(Level world, ResourceKey<Enchantment> enchantment) {
         return world
                 .registryAccess()
-                .registry(Registries.ENCHANTMENT)
-                .flatMap(r -> r.getHolder(enchantment))
+                .lookupOrThrow(Registries.ENCHANTMENT)
+                .get(enchantment)
                 .orElse(null);
     }
 

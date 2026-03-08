@@ -27,8 +27,8 @@ public abstract class WoverRoughNoiseCondition implements SurfaceRules.Condition
         final SurfaceRulesContextAccessor ctx = SurfaceRulesContextAccessor.class.cast(context2);
         final NormalNoise normalNoise = ctx.getRandomState().getOrCreateNoise(noise());
         final RandomSource roughnessSource = ctx.getRandomState()
-                                                .getOrCreateRandomFactory(NoiseParameterManager.ROUGHNESS_NOISE.location())
-                                                .fromHashOf(NoiseParameterManager.ROUGHNESS_NOISE.location());
+                                                .getOrCreateRandomFactory(NoiseParameterManager.ROUGHNESS_NOISE.identifier())
+                                                .fromHashOf(NoiseParameterManager.ROUGHNESS_NOISE.identifier());
 
         class NoiseThresholdCondition extends SurfaceRules.LazyCondition {
             NoiseThresholdCondition() {

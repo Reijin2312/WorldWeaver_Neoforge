@@ -30,7 +30,7 @@ public class WoverVanillaBlockLoot extends VanillaBlockLoot {
     }
 
     public LootItemCondition.Builder hasShearsOrSilkTouch() {
-        return HAS_SHEARS.or(hasSilkTouch());
+        return hasShears().or(hasSilkTouch());
     }
 
     public LootItemCondition.Builder doesNotHaveShearsOrSilkTouch() {

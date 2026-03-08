@@ -1,7 +1,10 @@
 package org.betterx.wover.complex.api.equipment;
 
+import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
-import net.minecraft.world.item.*;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.SmithingTemplateItem;
+import net.minecraft.world.item.ToolMaterial;
 import net.minecraft.world.level.block.Block;
 
 import org.jetbrains.annotations.NotNull;
@@ -13,14 +16,28 @@ public class ToolTier {
         var values = tier.getValues(slot);
         if (values == null)
             throw new IllegalArgumentException("No values for slot " + slot + " in tier " + tier);
-        return new Item.Properties().attributes(DiggerItem.createAttributes(tier.toolTier, values.attackDamage, values.attackSpeed));
+        ToolMaterial material = tier.toolTier;
+        return switch (slot) {
+            case PICKAXE_SLOT -> new Item.Properties().pickaxe(material, values.attackDamage, values.attackSpeed);
+            case AXE_SLOT -> new Item.Properties().axe(material, values.attackDamage, values.attackSpeed);
+            case SHOVEL_SLOT -> new Item.Properties().shovel(material, values.attackDamage, values.attackSpeed);
+            case HOE_SLOT -> new Item.Properties().hoe(material, values.attackDamage, values.attackSpeed);
+            case SHEARS_SLOT, HAMMER_SLOT -> new Item.Properties().tool(
+                    material,
+                    tier.blockTag != null ? tier.blockTag : BlockTags.MINEABLE_WITH_PICKAXE,
+                    values.attackDamage,
+                    values.attackSpeed,
+                    0.0F
+            );
+            default -> new Item.Properties();
+        };
     };
 
     public static final ToolSlot.PropertiesBuilder SWORD_ITEM_PROPERTIES = (slot, tier) -> {
         var values = tier.getValues(slot);
         if (values == null)
             throw new IllegalArgumentException("No values for slot " + slot + " in tier " + tier);
-        return new Item.Properties().attributes(SwordItem.createAttributes(tier.toolTier, (int) values.attackDamage, values.attackSpeed));
+        return new Item.Properties().sword(tier.toolTier, values.attackDamage, values.attackSpeed);
     };
 
     public record ToolValues(float attackDamage, float attackSpeed, SmithingTemplateItem smithingTemplate) {
@@ -38,13 +55,13 @@ public class ToolTier {
     }
 
     public final String name;
-    public final Tier toolTier;
+    public final ToolMaterial toolTier;
     public final TagKey<Block> blockTag;
     private final ToolValues[] toolValues;
 
     private ToolTier(
             String name,
-            Tier toolTier,
+            ToolMaterial toolTier,
             ToolValues[] toolValues,
             TagKey<Block> blockTag
     ) {
@@ -65,7 +82,7 @@ public class ToolTier {
 
     //a Builder class
     public static class Builder {
-        private Tier toolTier;
+        private ToolMaterial toolTier;
         private final ToolValues[] toolValues = new ToolValues[ToolSlot.values().length];
         private final String name;
         private TagKey<Block> blockTag;
@@ -79,7 +96,7 @@ public class ToolTier {
             return this;
         }
 
-        public Builder toolTier(Tier toolTier) {
+        public Builder toolTier(ToolMaterial toolTier) {
             this.toolTier = toolTier;
             return this;
         }
@@ -118,7 +135,7 @@ public class ToolTier {
      */
     public ToolTier copyWithOffset(
             @NotNull String newName,
-            @Nullable Tier newTier,
+            @Nullable ToolMaterial newTier,
             ToolValues offset,
             @Nullable TagKey<Block> blockTag
     ) {

@@ -19,7 +19,6 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.dimension.LevelStem;
-import net.minecraft.world.level.levelgen.WorldDimensions;
 
 import com.google.common.base.Stopwatch;
 
@@ -43,7 +42,7 @@ class BiomeRepairHelper {
                 registryAccess,
                 WorldGeneratorConfigImpl.getPresetsNbt()
         );
-        final Registry<Biome> biomes = registryAccess.registryOrThrow(Registries.BIOME);
+        final Registry<Biome> biomes = registryAccess.lookupOrThrow(Registries.BIOME);
 
         // ensure that biomes registered through the loader helpers have the proper tags
         registerAllBiomesFromRegistry(biomes);
@@ -138,7 +137,7 @@ class BiomeRepairHelper {
             }
 
             if (tag != null) {
-                final Holder.Reference<Biome> holder = biomes.getHolderOrThrow(e.getKey());
+                final Holder.Reference<Biome> holder = biomes.getOrThrow(e.getKey());
                 if (!holder.is(tag)) {
                     biomeTagWorker.addBiomeToTag(tag, biomes, e.getKey(), holder);
                     biomesAdded++;

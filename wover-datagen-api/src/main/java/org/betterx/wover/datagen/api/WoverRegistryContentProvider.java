@@ -14,7 +14,6 @@ import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.resources.ResourceKey;
 
 import net.neoforged.neoforge.common.data.DatapackBuiltinEntriesProvider;
-import net.neoforged.neoforge.common.data.ExistingFileHelper;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -97,15 +96,13 @@ public abstract class WoverRegistryContentProvider<T> extends WoverRegistryProvi
      *
      * @param output             The output to write the data to.
      * @param registriesFuture   A future sent from the data generator
-     * @param existingFileHelper The existing file helper from NeoForge datagen
      * @return The {@link DataProvider} that will serialize the Registry to the DataPack.
      */
     @ApiStatus.Internal
     @Override
     public final DataProvider getProvider(
             PackOutput output,
-            CompletableFuture<HolderLookup.Provider> registriesFuture,
-            ExistingFileHelper existingFileHelper
+            CompletableFuture<HolderLookup.Provider> registriesFuture
     ) {
         RegistrySetBuilder registryBuilder = new RegistrySetBuilder();
         buildRegistry(registryBuilder);

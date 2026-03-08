@@ -10,8 +10,6 @@ import net.minecraft.data.PackOutput;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.resources.ResourceKey;
 
-import net.neoforged.neoforge.common.data.ExistingFileHelper;
-
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
@@ -67,13 +65,11 @@ public abstract class WoverRegistryProvider<T> implements WoverDataProvider<Data
      *
      * @param output             The output to write the data to.
      * @param registriesFuture   A future sent from the data generator
-     * @param existingFileHelper The existing file helper from NeoForge datagen
      * @return A new {@link DataProvider} that serializes registry entries
      */
     public abstract DataProvider getProvider(
             PackOutput output,
-            CompletableFuture<HolderLookup.Provider> registriesFuture,
-            ExistingFileHelper existingFileHelper
+            CompletableFuture<HolderLookup.Provider> registriesFuture
     );
 
     /**

@@ -7,14 +7,11 @@ import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.levelgen.presets.WorldPreset;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 
 /**
  * API to register custom Setup UIs for {@link net.minecraft.world.level.levelgen.presets.WorldPreset}s
  */
-@OnlyIn(Dist.CLIENT)
 public class WorldPresetsUI {
     public interface PresetEditorGetter {
         PresetEditor get(Holder<WorldPreset> holder);

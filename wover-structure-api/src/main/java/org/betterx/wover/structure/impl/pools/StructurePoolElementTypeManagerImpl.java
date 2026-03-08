@@ -6,7 +6,7 @@ import org.betterx.wover.legacy.api.LegacyHelper;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.levelgen.structure.pools.StructurePoolElement;
 import net.minecraft.world.level.levelgen.structure.pools.StructurePoolElementType;
 
@@ -30,11 +30,11 @@ public class StructurePoolElementTypeManagerImpl {
         event.register(Registries.STRUCTURE_POOL_ELEMENT, helper -> {
             END = createType(SingleEndPoolElement.CODEC);
             TYPES.put(END_KEY, END);
-            TYPES.forEach((key, type) -> helper.register(key.location(), type));
+            TYPES.forEach((key, type) -> helper.register(key.identifier(), type));
 
             if (LegacyHelper.isLegacyEnabled()) {
                 helper.register(
-                        LegacyHelper.BCLIB_CORE.convertNamespace(END_KEY.location()),
+                        LegacyHelper.BCLIB_CORE.convertNamespace(END_KEY.identifier()),
                         createType(LegacyHelper.wrap(SingleEndPoolElement.CODEC))
                 );
             }
@@ -47,7 +47,7 @@ public class StructurePoolElementTypeManagerImpl {
     }
 
     public static <P extends StructurePoolElement> StructurePoolElementType<P> registerExternal(
-            ResourceLocation location,
+            Identifier location,
             MapCodec<P> codec
     ) {
         ResourceKey<StructurePoolElementType<?>> key = ResourceKey.create(Registries.STRUCTURE_POOL_ELEMENT, location);

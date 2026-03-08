@@ -7,7 +7,7 @@ import org.betterx.wover.potions.impl.PotionManagerImpl;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.item.alchemy.Potion;
@@ -20,7 +20,7 @@ public class PotionManager {
         return registerPotion(modCore.id(name), new Potion(modCore.namespace + "_" + name, new MobEffectInstance(effect, duration)));
     }
 
-    public static Holder<Potion> registerPotion(ResourceLocation id, Potion potion) {
+    public static Holder<Potion> registerPotion(Identifier id, Potion potion) {
         return Registry.registerForHolder(BuiltInRegistries.POTION, id, potion);
     }
 

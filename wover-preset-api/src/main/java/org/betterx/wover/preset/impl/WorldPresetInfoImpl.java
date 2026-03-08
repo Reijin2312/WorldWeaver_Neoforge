@@ -94,11 +94,11 @@ public class WorldPresetInfoImpl implements WorldPresetInfo {
 
     @Override
     public @Nullable ResourceKey<WorldPreset> getPresetOverride(ResourceKey<LevelStem> key) {
-        if (key.location().equals(LevelStem.OVERWORLD.location()))
+        if (key.identifier().equals(LevelStem.OVERWORLD.identifier()))
             return overworldPreset();
-        if (key.location().equals(LevelStem.NETHER.location()))
+        if (key.identifier().equals(LevelStem.NETHER.identifier()))
             return netherPreset();
-        if (key.location().equals(LevelStem.END.location()))
+        if (key.identifier().equals(LevelStem.END.identifier()))
             return endPreset();
         return null;
     }
@@ -111,7 +111,7 @@ public class WorldPresetInfoImpl implements WorldPresetInfo {
         //see if the preset has an override for this dimension, if so find the real preset to use
         ResourceKey<WorldPreset> configuredKey = null;
         ResourceKey<WorldPreset> overrideKey = this.getPresetOverride(forDimension);
-        
+
         while (overrideKey != null && count > 0) {
             configuredKey = overrideKey;
             overrideKey = WorldPresetInfoRegistry.getFor(configuredKey).getPresetOverride(forDimension);

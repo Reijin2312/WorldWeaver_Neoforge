@@ -4,7 +4,7 @@ import org.betterx.wover.structure.api.processors.StructureProcessorKey;
 
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 import net.minecraft.world.level.levelgen.structure.pools.StructurePoolElement;
 import net.minecraft.world.level.levelgen.structure.pools.StructureTemplatePool;
@@ -66,11 +66,11 @@ public interface StructurePoolBuilder {
     StructurePoolBuilder emptyTerminator();
 
     @NotNull
-    ElementBuilder startSingle(@NotNull ResourceLocation nbtLocation);
+    ElementBuilder startSingle(@NotNull Identifier nbtLocation);
     @NotNull
-    ElementBuilder startSingleEnd(@NotNull ResourceLocation nbtLocation);
+    ElementBuilder startSingleEnd(@NotNull Identifier nbtLocation);
     @NotNull
-    ElementBuilder startLegacySingle(@NotNull ResourceLocation nbtLocation);
+    ElementBuilder startLegacySingle(@NotNull Identifier nbtLocation);
     @NotNull
     StructurePoolBuilder addEmptyElement(int weight);
 

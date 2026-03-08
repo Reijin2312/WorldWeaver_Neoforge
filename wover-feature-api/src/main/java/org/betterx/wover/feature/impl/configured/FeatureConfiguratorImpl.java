@@ -11,7 +11,7 @@ import net.minecraft.core.HolderGetter;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
@@ -51,7 +51,7 @@ public abstract class FeatureConfiguratorImpl<FC extends FeatureConfiguration, F
      */
     @NotNull
     public static ResourceKey<ConfiguredFeature<?, ?>> createKey(
-            @NotNull ResourceLocation id
+            @NotNull Identifier id
     ) {
         return ResourceKey.create(
                 Registries.CONFIGURED_FEATURE,
@@ -147,7 +147,7 @@ public abstract class FeatureConfiguratorImpl<FC extends FeatureConfiguration, F
         FC config = createConfiguration();
 
         if (config == null) {
-            throw new IllegalStateException("Feature configuration for " + key.location() + " can not be null!");
+            throw new IllegalStateException("Feature configuration for " + key.identifier() + " can not be null!");
         }
 
         return new ConfiguredFeature<>(getFeature(), config);
@@ -156,7 +156,7 @@ public abstract class FeatureConfiguratorImpl<FC extends FeatureConfiguration, F
     void throwStateError(String message) {
         throw new IllegalStateException(message + (key == null
                 ? ""
-                : ("(" + key.location() + ")")
+                : ("(" + key.identifier() + ")")
         ));
     }
 }

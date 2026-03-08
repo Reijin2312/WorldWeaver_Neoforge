@@ -12,7 +12,7 @@ import net.minecraft.core.WritableRegistry;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.registries.DataPackRegistryEvent;
 
 import java.util.function.BiConsumer;
@@ -47,10 +47,10 @@ public class DatapackRegistryBuilderImpl {
     }
 
 
-    public static boolean isRegistered(ResourceLocation registryId) {
+    public static boolean isRegistered(Identifier registryId) {
         return REGISTRIES.stream()
                          .filter(entry -> entry.definesRegistry())
-                         .anyMatch(entry -> entry.key.location().equals(registryId));
+                         .anyMatch(entry -> entry.key.identifier().equals(registryId));
     }
 
     public static <T> void register(
@@ -65,7 +65,7 @@ public class DatapackRegistryBuilderImpl {
             Consumer<BootstrapContext<T>> bootstrap,
             int priority
     ) {
-        LibWoverCore.C.log.debug("Adding dynamic registry bootstrap: " + key.location());
+        LibWoverCore.C.log.debug("Adding dynamic registry bootstrap: " + key.identifier());
         REGISTRIES.add(new Entry<>(key, null, null, bootstrap), Math.max(MAX_READONLY_PRIORITY + 1, priority));
     }
 
@@ -117,11 +117,11 @@ public class DatapackRegistryBuilderImpl {
             int priority,
             Consumer<BootstrapContext<T>> bootstrap
     ) {
-        if (isRegistered(key.location())) {
-            throw new IllegalStateException("Registry with id " + key.location() + " was already registered!");
+        if (isRegistered(key.identifier())) {
+            throw new IllegalStateException("Registry with id " + key.identifier() + " was already registered!");
         }
 
-        LibWoverCore.C.log.debug("Adding dynamic registry: " + key.location());
+        LibWoverCore.C.log.debug("Adding dynamic registry: " + key.identifier());
         REGISTRIES.add(new Entry<>(key, elementCodec, networkCodec, bootstrap), priority);
     }
 
@@ -164,10 +164,10 @@ public class DatapackRegistryBuilderImpl {
             WritableRegistry<E> writableRegistry
     ) {
         initEntrypoints();
-        LibWoverCore.C.LOG.debug("Bootstrapping registry {}", resourceKey.location());
+        LibWoverCore.C.LOG.debug("Bootstrapping registry {}", resourceKey.identifier());
         REGISTRIES.forEach(entry -> {
             if (entry.key.equals(resourceKey)) {
-                LibWoverCore.C.LOG.debug("Calling custom Registry Bootstrap on {}", resourceKey.location());
+                LibWoverCore.C.LOG.debug("Calling custom Registry Bootstrap on {}", resourceKey.identifier());
                 entry.bootstrap.accept(entry.getContext(registryInfoLookup, (WritableRegistry) writableRegistry));
             }
         });

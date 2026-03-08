@@ -24,6 +24,7 @@ allprojects { projIt ->
     apply plugin: 'eclipse'
     apply plugin: 'maven-publish'
     apply plugin: 'net.neoforged.moddev'
+    apply plugin: 'com.diffplug.spotless'
 
     repositories {
         maven { url 'https://maven.neoforged.net/releases' }
@@ -141,8 +142,8 @@ allprojects { projIt ->
             server {
                 server()
             }
-            data {
-                data()
+            clientData {
+                clientData()
                 programArguments.addAll(
                         "--mod", modId,
                         "--all",
@@ -158,7 +159,7 @@ allprojects { projIt ->
         }
         // Datagen needs the resources output (neoforge.mods.toml) on the classpath, otherwise the mod
         // directory (classes only) is rejected as an invalid mod file.
-        tasks.matching { it.name == "runData" }.configureEach {
+        tasks.matching { it.name == "runClientData" }.configureEach {
             dependsOn(processResources)
             classpath += files(sourceSets.main.output.resourcesDir)
         }
@@ -247,6 +248,17 @@ allprojects { projIt ->
     tasks.withType(AbstractArchiveTask).configureEach {
         preserveFileTimestamps = false
         reproducibleFileOrder = true
+    }
+
+    spotless {
+        java {
+            target 'src/*/java/**/*.java'
+            targetExclude 'src/main/generated/**'
+            trimTrailingWhitespace()
+            endWithNewline()
+            removeUnusedImports()
+            indentWithSpaces(4)
+        }
     }
 
     // Run this task after updating minecraft to regenerate any required resources
@@ -367,7 +379,7 @@ tasks.named("processResources") {
 tasks.named("jar") {
     dependsOn(woverProjects.collect { it.tasks.named("classes") })
     dependsOn("mergeWoverAccessTransformers", "mergeWoverServices")
-    dependsOn(tasks.matching { it.name == "runData" })
+    dependsOn(tasks.matching { it.name == "runClientData" })
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from(woverProjects.collect { it.sourceSets.main.output }) {
         exclude("META-INF/neoforge.mods.toml", "META-INF/accesstransformer.cfg", "META-INF/services/**")

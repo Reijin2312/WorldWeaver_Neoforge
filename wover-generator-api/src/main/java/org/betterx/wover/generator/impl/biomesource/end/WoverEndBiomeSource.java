@@ -31,8 +31,6 @@ import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.biome.Climate;
 import net.minecraft.world.level.levelgen.DensityFunction;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 import java.awt.*;
 import java.util.List;
@@ -249,7 +247,7 @@ public class WoverEndBiomeSource extends WoverBiomeSource implements
         if (!wasBound()) reloadBiomes(false);
 
         if (mapLand == null || mapVoid == null || mapCenter == null || mapBarrens == null)
-            return this.possibleBiomes().stream().findFirst().orElseThrow();
+            return applyFallbackBiomeSource(this.possibleBiomes().stream().findFirst().orElseThrow(), biomeX, biomeY, biomeZ, sampler);
 
         int posX = QuartPos.toBlock(biomeX);
         int posY = QuartPos.toBlock(biomeY);
@@ -303,14 +301,21 @@ public class WoverEndBiomeSource extends WoverBiomeSource implements
         for (BiomeDecider decider : deciders) {
             if (decider.canProvideBiome(suggestedType)) {
                 result = decider.provideBiome(suggestedType, posX, posY, posZ);
-                if (result != null) return result.biome;
+                if (result != null) return applyFallbackBiomeSource(result.biome, biomeX, biomeY, biomeZ, sampler);
             }
         }
 
-        if (suggestedType == CommonBiomeTags.IS_END_CENTER) return mapCenter.getBiome(posX, posY, posZ).biome;
-        if (suggestedType == CommonBiomeTags.IS_SMALL_END_ISLAND) return mapVoid.getBiome(posX, posY, posZ).biome;
-        if (suggestedType == CommonBiomeTags.IS_END_BARRENS) return mapBarrens.getBiome(posX, posY, posZ).biome;
-        return mapLand.getBiome(posX, posY, posZ).biome;
+        final Holder<Biome> pickedBiome;
+        if (suggestedType == CommonBiomeTags.IS_END_CENTER) {
+            pickedBiome = mapCenter.getBiome(posX, posY, posZ).biome;
+        } else if (suggestedType == CommonBiomeTags.IS_SMALL_END_ISLAND) {
+            pickedBiome = mapVoid.getBiome(posX, posY, posZ).biome;
+        } else if (suggestedType == CommonBiomeTags.IS_END_BARRENS) {
+            pickedBiome = mapBarrens.getBiome(posX, posY, posZ).biome;
+        } else {
+            pickedBiome = mapLand.getBiome(posX, posY, posZ).biome;
+        }
+        return applyFallbackBiomeSource(pickedBiome, biomeX, biomeY, biomeZ, sampler);
     }
 
     @Override
@@ -326,7 +331,6 @@ public class WoverEndBiomeSource extends WoverBiomeSource implements
     }
 
     @Override
-    @OnlyIn(Dist.CLIENT)
     public BiomeSourceConfigPanel<WoverEndBiomeSource, WoverEndConfig> biomeSourceConfigPanel(@NotNull Screen parent) {
         return new EndConfigPage(config);
     }

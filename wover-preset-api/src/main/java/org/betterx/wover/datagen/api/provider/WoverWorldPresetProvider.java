@@ -15,8 +15,6 @@ import net.minecraft.data.tags.TagsProvider;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.world.level.levelgen.presets.WorldPreset;
 
-import net.neoforged.neoforge.common.data.ExistingFileHelper;
-
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -71,15 +69,13 @@ public abstract class WoverWorldPresetProvider
      *
      * @param output           The output to write the data to.
      * @param registriesFuture A future sent from the data generator
-     * @param existingFileHelper The existing file helper from NeoForge datagen
      * @return A new {@link TagsProvider}
      */
     public TagsProvider<WorldPreset> getSecondaryProvider(
             PackOutput output,
-            CompletableFuture<HolderLookup.Provider> registriesFuture,
-            ExistingFileHelper existingFileHelper
+            CompletableFuture<HolderLookup.Provider> registriesFuture
     ) {
-        return new WorldPresetTagProvider(modCore).getProvider(output, registriesFuture, existingFileHelper);
+        return new WorldPresetTagProvider(modCore).getProvider(output, registriesFuture);
     }
 
     private class WorldPresetTagProvider extends WoverTagProvider<WorldPreset, TagBootstrapContext<WorldPreset>> {

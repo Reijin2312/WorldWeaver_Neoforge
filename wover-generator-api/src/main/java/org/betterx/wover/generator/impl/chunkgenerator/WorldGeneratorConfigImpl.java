@@ -60,7 +60,7 @@ public class WorldGeneratorConfigImpl {
             }
         }
         if (root != null && root.contains(TAG_PRESET))
-            return root.getCompound(TAG_PRESET);
+            return root.getCompound(TAG_PRESET).orElse(new CompoundTag());
 
         return new CompoundTag();
     }
@@ -116,13 +116,13 @@ public class WorldGeneratorConfigImpl {
             if (oldGen != null) {
                 if (oldGen.contains("type")) {
                     LibWoverWorldGenerator.C.log.info("Found World with beta generator Settings.");
-                    if ("bclib:bcl_world_preset_settings".equals(oldGen.getString("type"))) {
+                    if ("bclib:bcl_world_preset_settings".equals(oldGen.getStringOr("type", ""))) {
                         int netherVersion = 18;
                         int endVersion = 18;
                         if (oldGen.contains("minecraft:the_nether"))
-                            netherVersion = oldGen.getInt("minecraft:the_nether");
+                            netherVersion = oldGen.getIntOr("minecraft:the_nether", netherVersion);
                         if (oldGen.contains("minecraft:the_end"))
-                            endVersion = oldGen.getInt("minecraft:the_end");
+                            endVersion = oldGen.getIntOr("minecraft:the_end", endVersion);
 
                         if (netherVersion == 18) netherVersion = 0;
                         else if (netherVersion == 17) netherVersion = 1;
@@ -157,7 +157,7 @@ public class WorldGeneratorConfigImpl {
 
             Version bclVersion = new Version("0.0.0");
             if (bclRoot.contains(LEGACY_TAG_VERSION)) {
-                bclVersion = new Version(bclRoot.getString(LEGACY_TAG_VERSION));
+                bclVersion = new Version(bclRoot.getStringOr(LEGACY_TAG_VERSION, ""));
             }
             boolean isPre18 = !bclVersion.isLargerOrEqualVersion("1.0.0");
 
@@ -169,7 +169,7 @@ public class WorldGeneratorConfigImpl {
             if (WorldConfig.hasMod(IntegrationCore.BETTER_NETHER)) {
                 LibWoverWorldGenerator.C.log.info("Found Data from BetterNether, using for migration.");
                 final CompoundTag bnRoot = WorldConfig.getRootTag(IntegrationCore.BETTER_NETHER);
-                biomeSourceVersion = "1.17".equals(bnRoot.getString(LEGACY_TAG_BN_GEN_VERSION))
+                biomeSourceVersion = "1.17".equals(bnRoot.getStringOr(LEGACY_TAG_BN_GEN_VERSION, ""))
                         ? PresetRegistryImpl.BCL_WORLD_17
                         : WorldPresets.WOVER_WORLD;
             }

@@ -1,6 +1,6 @@
 package org.betterx.wover.block.api;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 
@@ -10,5 +10,5 @@ public interface CustomBlockItemProvider {
      *
      * @return {@link BlockItem}
      */
-    BlockItem getCustomBlockItem(ResourceLocation blockID, Item.Properties settings);
+    BlockItem getCustomBlockItem(Identifier blockID, Item.Properties settings);
 }

@@ -46,9 +46,7 @@ public class ArmorDescription<I extends Item> extends ItemDescription<I> {
         if (item == null) return;
         if (tier == null) return;
 
-        var repair = tier.armorMaterial.value().repairIngredient();
-        var ingot = repair.get();
-        if (ingot.isEmpty()) return;
+        TagKey<Item> repairTag = tier.armorMaterial.repairIngredient();
 
         var values = tier.getValues(slot);
         if (values != null && values.smithingTemplate() != null && sourceSet != null) {
@@ -56,15 +54,15 @@ public class ArmorDescription<I extends Item> extends ItemDescription<I> {
                     .smithing(location, item)
                     .template(values.smithingTemplate())
                     .base(sourceSet.get(this.slot))
-                    .addon(ingot)
+                    .addon(repairTag)
                     .category(slot.category)
                     .build(ctx);
         } else {
             var builder = RecipeBuilder.crafting(location, item)
-                                       .addMaterial('#', ingot)
+                                       .addMaterial('#', repairTag)
                                        .category(RecipeCategory.TOOLS);
 
-            if (buildRecipe(item, stick, builder)) return;
+            if (buildArmorRecipe(slot, builder)) return;
             builder
                     .category(slot.category)
                     .group(location.getPath())

@@ -14,15 +14,21 @@ import org.betterx.wover.preset.api.WorldPresetInfoRegistry;
 import org.betterx.wover.generator.datagen.WoverWorldGeneratorDatagen;
 import org.betterx.wover.preset.api.WorldPresetManager;
 import org.betterx.wover.preset.api.WorldPresetTags;
+import org.betterx.wover.preset.impl.WorldPresetsManagerImpl;
 
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.data.event.GatherDataEvent;
 public class LibWoverWorldGenerator {
     public static final ModCore C = ModCore.create("wover-generator", "wover");
 
     public LibWoverWorldGenerator(IEventBus modEventBus) {
         C.registerDatapackListener(modEventBus);
-        modEventBus.addListener(new WoverWorldGeneratorDatagen()::onGatherData);
+        WorldPresetsManagerImpl.initialize();
+
+        WoverWorldGeneratorDatagen datagen = new WoverWorldGeneratorDatagen();
+        modEventBus.addListener(GatherDataEvent.Client.class, datagen::onGatherData);
+        modEventBus.addListener(GatherDataEvent.Server.class, datagen::onGatherData);
         modEventBus.addListener(net.neoforged.neoforge.registries.RegisterEvent.class, BiomeSourceManagerImpl::register);
         modEventBus.addListener(net.neoforged.neoforge.registries.RegisterEvent.class, ChunkGeneratorManagerImpl::onRegister);
         WorldPresetManager.BOOTSTRAP_WORLD_PRESETS.subscribe(PresetRegistryImpl::bootstrapWorldPresets);
@@ -31,7 +37,7 @@ public class LibWoverWorldGenerator {
         if (!ModCore.isClient() && Configs.MAIN.forceDefaultWorldPresetOnServer.get()) {
             WorldPresetManager.suggestDefault(WorldPresets.WOVER_WORLD, 2000);
         }
-        
+
         PresetRegistryImpl.ensureStaticallyLoaded();
         WoverBiomeDataImpl.initialize();
         BiomeSourceManagerImpl.initialize();

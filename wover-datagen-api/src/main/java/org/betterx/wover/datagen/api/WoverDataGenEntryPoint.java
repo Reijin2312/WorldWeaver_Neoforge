@@ -18,10 +18,9 @@ import net.minecraft.data.recipes.RecipeProvider;
 import net.minecraft.data.registries.RegistryPatchGenerator;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import net.neoforged.neoforge.common.data.DatapackBuiltinEntriesProvider;
-import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
 
 import java.nio.file.Path;
@@ -36,7 +35,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
-import org.betterx.wover.datagen.api.WoverLootProvider;
 
 /**
  * A simplified entrypoint for NeoForge data generators with support for multiple datapacks
@@ -57,10 +55,10 @@ public abstract class WoverDataGenEntryPoint {
     /**
      * Creates a new {@link PackBuilder} for an additional Datapack.
      *
-     * @param location The {@link ResourceLocation} of the Datapack
+     * @param location The {@link Identifier} of the Datapack
      * @return The new {@link PackBuilder} for the Datapack
      */
-    protected PackBuilder addDatapack(@Nullable ResourceLocation location) {
+    protected PackBuilder addDatapack(@Nullable Identifier location) {
         PackBuilder res = new PackBuilder(modCore(), location);
         builders.add(res);
         return res;
@@ -72,7 +70,7 @@ public abstract class WoverDataGenEntryPoint {
      * for additional Datapacks.
      *
      * @param globalPack The {@link PackBuilder} for the global Datapack
-     * @see #addDatapack(ResourceLocation)
+     * @see #addDatapack(Identifier)
      */
     protected abstract void onInitializeProviders(PackBuilder globalPack);
 
@@ -116,14 +114,12 @@ public abstract class WoverDataGenEntryPoint {
         initialize();
 
         final PackOutput baseOutput = event.getGenerator().getPackOutput();
-        final ExistingFileHelper existingFileHelper = event.getExistingFileHelper();
 
         for (PackBuilder builder : builders) {
             PackOutput packOutput = createPackOutput(event, baseOutput, builder.location);
             builder.pack(packOutput);
 
             RegistryPackContext registryContext = getRegistryContext(event, packOutput);
-            CompletableFuture<HolderLookup.Provider> registryLookup = registryContext.registryLookup;
             final List<? extends WoverRegistryProvider<?>> registryProviders = builder.registryProviders();
             if (!registryProviders.isEmpty()) {
                 registryContext.addModCore(builder.modCore);
@@ -134,6 +130,7 @@ public abstract class WoverDataGenEntryPoint {
                     registryContext.providerAdded = true;
                 }
             }
+            CompletableFuture<HolderLookup.Provider> registryLookup = registryContext.registryLookup();
 
             List<WoverLootProvider> lootProviders = new ArrayList<>();
             List<WoverRecipeGenerator> recipeGenerators = new ArrayList<>();
@@ -149,8 +146,8 @@ public abstract class WoverDataGenEntryPoint {
                     recipeGenerators.add(recipeGenerator);
                     continue;
                 }
-                event.addProvider(provider.getProvider(packOutput, registryLookup, existingFileHelper));
-                addMultiProviders(event, provider, packOutput, registryLookup, existingFileHelper);
+                event.addProvider(provider.getProvider(packOutput, registryLookup));
+                addMultiProviders(event, provider, packOutput, registryLookup);
             }
 
             if (!lootProviders.isEmpty()) {
@@ -170,10 +167,20 @@ public abstract class WoverDataGenEntryPoint {
                 final List<WoverRecipeGenerator> generators = List.copyOf(recipeGenerators);
                 final String recipeName = builder.modCore.modId + " Recipes" +
                         (builder.location != null ? " [" + builder.location + "]" : "");
-                RecipeProvider delegate = new RecipeProvider(packOutput, registryLookup) {
+                RecipeProvider.Runner delegate = new RecipeProvider.Runner(packOutput, registryLookup) {
                     @Override
-                    protected void buildRecipes(RecipeOutput exporter, HolderLookup.Provider lookup) {
-                        generators.forEach(gen -> gen.buildRecipes(lookup, exporter));
+                    public String getName() {
+                        return recipeName;
+                    }
+
+                    @Override
+                    protected RecipeProvider createRecipeProvider(HolderLookup.Provider lookup, RecipeOutput output) {
+                        return new RecipeProvider(lookup, output) {
+                            @Override
+                            protected void buildRecipes() {
+                                generators.forEach(gen -> gen.buildRecipes(lookup, output));
+                            }
+                        };
                     }
                 };
                 event.addProvider(new NamedDataProvider(recipeName, delegate));
@@ -198,7 +205,7 @@ public abstract class WoverDataGenEntryPoint {
         }
     }
 
-    private PackOutput createPackOutput(GatherDataEvent event, PackOutput baseOutput, @Nullable ResourceLocation location) {
+    private PackOutput createPackOutput(GatherDataEvent event, PackOutput baseOutput, @Nullable Identifier location) {
         if (location == null) {
             return baseOutput;
         }
@@ -237,14 +244,13 @@ public abstract class WoverDataGenEntryPoint {
             GatherDataEvent event,
             WoverDataProvider<?> provider,
             PackOutput output,
-            CompletableFuture<HolderLookup.Provider> registriesFuture,
-            ExistingFileHelper existingFileHelper
+            CompletableFuture<HolderLookup.Provider> registriesFuture
     ) {
         if (provider instanceof WoverDataProvider.Secondary<?> wpp) {
-            event.addProvider(wpp.getSecondaryProvider(output, registriesFuture, existingFileHelper));
+            event.addProvider(wpp.getSecondaryProvider(output, registriesFuture));
         }
         if (provider instanceof WoverDataProvider.Tertiary<?> wpp) {
-            event.addProvider(wpp.getTertiaryProvider(output, registriesFuture, existingFileHelper));
+            event.addProvider(wpp.getTertiaryProvider(output, registriesFuture));
         }
     }
 
@@ -277,7 +283,7 @@ public abstract class WoverDataGenEntryPoint {
      * @return Whether the Datagenerator should be run
      */
     protected boolean ignoreRun(GatherDataEvent event) {
-        return !runsForMod(modCore(), event.getMods());
+        return !runsForMod(modCore(), Set.of(event.getModContainer().getModId()));
     }
 
     /**
@@ -302,15 +308,31 @@ public abstract class WoverDataGenEntryPoint {
         private final PackOutput packOutput;
         private final RegistrySetBuilder registryBuilder = new RegistrySetBuilder();
         private final Map<ResourceKey<?>, RegistryBootstrapGroup> bootstrapGroups = new LinkedHashMap<>();
-        private final CompletableFuture<RegistrySetBuilder.PatchedRegistries> patchedRegistries;
-        private final CompletableFuture<HolderLookup.Provider> registryLookup;
+        private final CompletableFuture<HolderLookup.Provider> baseLookup;
+        @Nullable
+        private CompletableFuture<RegistrySetBuilder.PatchedRegistries> patchedRegistries = null;
+        @Nullable
+        private CompletableFuture<HolderLookup.Provider> registryLookup = null;
         private final Set<String> modIds = new HashSet<>();
         private boolean providerAdded = false;
 
         private RegistryPackContext(PackOutput packOutput, CompletableFuture<HolderLookup.Provider> baseLookup) {
             this.packOutput = packOutput;
-            this.patchedRegistries = RegistryPatchGenerator.createLookup(baseLookup, registryBuilder);
-            this.registryLookup = patchedRegistries.thenApply(RegistrySetBuilder.PatchedRegistries::full);
+            this.baseLookup = baseLookup;
+        }
+
+        private synchronized CompletableFuture<RegistrySetBuilder.PatchedRegistries> patchedRegistries() {
+            if (patchedRegistries == null) {
+                patchedRegistries = RegistryPatchGenerator.createLookup(baseLookup, registryBuilder);
+            }
+            return patchedRegistries;
+        }
+
+        private synchronized CompletableFuture<HolderLookup.Provider> registryLookup() {
+            if (registryLookup == null) {
+                registryLookup = patchedRegistries().thenApply(RegistrySetBuilder.PatchedRegistries::full);
+            }
+            return registryLookup;
         }
 
         private void addModCore(ModCore modCore) {
@@ -361,7 +383,7 @@ public abstract class WoverDataGenEntryPoint {
         }
 
         private DataProvider createProvider() {
-            return new DeferredRegistryProvider(packOutput, patchedRegistries, modIds);
+            return new DeferredRegistryProvider(packOutput, patchedRegistries(), modIds);
         }
     }
 

@@ -9,4 +9,3 @@ public class CreativeTabs {
         return new CreativeTabManagerImpl(modCore);
     }
 }
-

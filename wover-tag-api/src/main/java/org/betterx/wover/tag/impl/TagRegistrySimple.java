@@ -15,4 +15,3 @@ public class TagRegistrySimple<T> extends TagRegistryImpl.WithRegistry<T, TagBoo
         return TagBootstrapContextImpl.create(this, initAll);
     }
 }
-

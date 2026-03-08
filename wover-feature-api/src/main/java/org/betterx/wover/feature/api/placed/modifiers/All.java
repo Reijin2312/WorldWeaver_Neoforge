@@ -2,7 +2,6 @@ package org.betterx.wover.feature.api.placed.modifiers;
 
 import org.betterx.wover.feature.impl.placed.modifiers.PlacementModifiersImpl;
 
-import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;

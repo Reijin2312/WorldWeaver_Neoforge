@@ -2,10 +2,11 @@ package org.betterx.wover.recipe.impl;
 
 import org.betterx.wover.recipe.api.CraftingRecipeBuilder;
 
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.data.recipes.ShapedRecipeBuilder;
 import net.minecraft.data.recipes.ShapelessRecipeBuilder;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -22,7 +23,7 @@ public class CraftingRecipeBuilderImpl extends BaseRecipeBuilderImpl<CraftingRec
     protected boolean showNotification;
     protected final Map<Character, Ingredient> materials;
 
-    public CraftingRecipeBuilderImpl(ResourceLocation id, ItemLike output) {
+    public CraftingRecipeBuilderImpl(Identifier id, ItemLike output) {
         super(id, output);
         this.showNotification = true;
         this.materials = new HashMap<>();
@@ -31,13 +32,13 @@ public class CraftingRecipeBuilderImpl extends BaseRecipeBuilderImpl<CraftingRec
     @Override
     public CraftingRecipeBuilder addMaterial(char key, TagKey<Item> value) {
         unlockedBy(value);
-        return _addMaterial(key, Ingredient.of(value));
+        return _addMaterial(key, ingredientOf(value));
     }
 
     @Override
     public CraftingRecipeBuilder addMaterial(char key, ItemStack... values) {
         unlockedBy(values);
-        return _addMaterial(key, Ingredient.of(Arrays.stream(values)));
+        return _addMaterial(key, Ingredient.of(Arrays.stream(values).map(ItemStack::getItem)));
     }
 
     @Override
@@ -48,7 +49,7 @@ public class CraftingRecipeBuilderImpl extends BaseRecipeBuilderImpl<CraftingRec
 
     @Override
     public CraftingRecipeBuilderImpl addMaterial(char key, Ingredient value) {
-        unlockedBy(value.getItems());
+        unlockedBy(value);
         return _addMaterial(key, value);
     }
 
@@ -110,7 +111,7 @@ public class CraftingRecipeBuilderImpl extends BaseRecipeBuilderImpl<CraftingRec
     }
 
     private void buildShaped(RecipeOutput ctx) {
-        var builder = ShapedRecipeBuilder.shaped(category, output.getItem(), output.getCount());
+        var builder = ShapedRecipeBuilder.shaped(BuiltInRegistries.ITEM, category, output.copy());
 
         for (Map.Entry<Character, Ingredient> mat : materials.entrySet()) {
             builder.define(mat.getKey(), mat.getValue());
@@ -126,11 +127,11 @@ public class CraftingRecipeBuilderImpl extends BaseRecipeBuilderImpl<CraftingRec
 
         builder.showNotification(this.showNotification);
         builder.group(this.group);
-        builder.save(ctx, id);
+        builder.save(ctx, recipeKey(id));
     }
 
     private void buildShapeless(RecipeOutput ctx) {
-        var builder = ShapelessRecipeBuilder.shapeless(category, output.getItem(), output.getCount());
+        var builder = ShapelessRecipeBuilder.shapeless(BuiltInRegistries.ITEM, category, output.copy());
 
         for (Map.Entry<Character, Ingredient> mat : materials.entrySet()) {
             builder.requires(mat.getValue());
@@ -143,7 +144,7 @@ public class CraftingRecipeBuilderImpl extends BaseRecipeBuilderImpl<CraftingRec
         }
 
         builder.group(this.group);
-        builder.save(ctx, id);
+        builder.save(ctx, recipeKey(id));
     }
 
     @Override

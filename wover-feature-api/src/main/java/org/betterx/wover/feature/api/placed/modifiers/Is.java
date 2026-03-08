@@ -1,24 +1,18 @@
 package org.betterx.wover.feature.api.placed.modifiers;
 
-import org.betterx.wover.entrypoint.LibWoverFeature;
 import org.betterx.wover.feature.impl.placed.modifiers.PlacementModifiersImpl;
-import org.betterx.wover.tag.api.predefined.CommonBlockTags;
 
-import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.levelgen.blockpredicates.BlockPredicate;
 import net.minecraft.world.level.levelgen.placement.PlacementContext;
 import net.minecraft.world.level.levelgen.placement.PlacementFilter;
 import net.minecraft.world.level.levelgen.placement.PlacementModifierType;
-import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.Optional;
 import org.jetbrains.annotations.NotNull;
@@ -77,7 +71,7 @@ public class Is extends PlacementFilter {
      * @return a new instance
      */
     public static Is below(BlockPredicate predicate) {
-        return new Is(predicate, Optional.of(Direction.DOWN.getNormal()));
+        return new Is(predicate, Optional.of(Direction.DOWN.getUnitVec3i()));
     }
 
     /**
@@ -87,7 +81,7 @@ public class Is extends PlacementFilter {
      * @return a new instance
      */
     public static Is above(BlockPredicate predicate) {
-        return new Is(predicate, Optional.of(Direction.UP.getNormal()));
+        return new Is(predicate, Optional.of(Direction.UP.getUnitVec3i()));
     }
 
     /**

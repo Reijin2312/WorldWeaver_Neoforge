@@ -5,7 +5,7 @@ import org.betterx.wover.config.api.DatapackConfigs;
 import org.betterx.wover.events.api.Event;
 import org.betterx.wover.events.api.WorldLifecycle;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.flag.FeatureFlagSet;
 
@@ -56,7 +56,7 @@ public class WorldDatapackConfigImpl {
     final List<LoadedItem> resources = new LinkedList<>();
 
     private record LoadedItem(
-            ResourceLocation resource,
+            Identifier resource,
             JsonObject object,
             ConfigResource cfg,
             int initialPriority,
@@ -78,7 +78,7 @@ public class WorldDatapackConfigImpl {
         }
     }
 
-    private void processBiomeConfigs(ResourceLocation resourceLocation, JsonObject jsonObject) {
+    private void processBiomeConfigs(Identifier Identifier, JsonObject jsonObject) {
         int priority = Event.DEFAULT_PRIORITY;
         boolean defaultPriority = true;
         if (jsonObject.has("priority") && jsonObject.get("priority").isJsonPrimitive() && jsonObject
@@ -87,10 +87,10 @@ public class WorldDatapackConfigImpl {
             defaultPriority = false;
             priority = jsonObject.getAsJsonPrimitive("priority").getAsInt();
         }
-        final ConfigResource config = CONFIGS.get(resourceLocation.getPath());
+        final ConfigResource config = CONFIGS.get(Identifier.getPath());
 
         if (config != null) {
-            resources.add(new LoadedItem(resourceLocation, jsonObject, config, priority, defaultPriority));
+            resources.add(new LoadedItem(Identifier, jsonObject, config, priority, defaultPriority));
         }
 
     }

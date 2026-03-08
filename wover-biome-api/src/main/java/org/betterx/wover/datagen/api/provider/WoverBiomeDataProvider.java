@@ -6,7 +6,7 @@ import org.betterx.wover.core.api.ModCore;
 import org.betterx.wover.datagen.api.WoverRegistryContentProvider;
 
 import net.minecraft.data.worldgen.BootstrapContext;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -34,7 +34,7 @@ public abstract class WoverBiomeDataProvider extends WoverRegistryContentProvide
      */
     public WoverBiomeDataProvider(
             @NotNull ModCore modCore,
-            @NotNull ResourceLocation providerId
+            @NotNull Identifier providerId
     ) {
         super(modCore, providerId.toString() + " (Biome Data)", BiomeDataRegistry.BIOME_DATA_REGISTRY);
     }
@@ -47,6 +47,3 @@ public abstract class WoverBiomeDataProvider extends WoverRegistryContentProvide
     @Override
     protected abstract void bootstrap(BootstrapContext<BiomeData> context);
 }
-
-
-

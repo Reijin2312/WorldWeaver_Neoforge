@@ -2,13 +2,13 @@ package org.betterx.wover.structure.api.structures.nbt;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
-public record RandomNbtStructureElement(ResourceLocation nbtLocation, int yOffset) {
+public record RandomNbtStructureElement(Identifier nbtLocation, int yOffset) {
     public static final Codec<RandomNbtStructureElement> CODEC =
             RecordCodecBuilder.create((instance) ->
                     instance.group(
-                                    ResourceLocation.CODEC
+                                    Identifier.CODEC
                                             .fieldOf("location")
                                             .forGetter((cfg) -> cfg.nbtLocation),
                                     Codec

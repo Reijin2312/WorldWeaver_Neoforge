@@ -28,7 +28,7 @@ public record InDimension(ResourceKey<LevelStem> dimensionKey) implements BiomeP
 
     @Override
     public boolean test(Context ctx) {
-        final LevelStem dimension = ctx.levelStems.get(dimensionKey);
+        final LevelStem dimension = ctx.levelStems.get(dimensionKey).map(Holder.Reference::value).orElse(null);
         if (dimension == null) return false;
 
         return dimension.generator()

@@ -6,13 +6,10 @@ import org.betterx.wover.ui.api.VersionChecker;
 
 import net.minecraft.client.gui.screens.Screen;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 import java.util.List;
 import java.util.function.Function;
 
-@OnlyIn(Dist.CLIENT)
 public class VersionCheckerClient extends VersionChecker {
     public static void presentUpdateScreen(List<Function<Runnable, Screen>> screens) {
         VersionChecker.startCheck(ModCore.isClient());

@@ -6,7 +6,7 @@ import org.betterx.wover.legacy.api.LegacyHelper;
 
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.levelgen.placement.PlacementModifier;
 import net.minecraft.world.level.levelgen.placement.PlacementModifierType;
 
@@ -14,8 +14,8 @@ import org.jetbrains.annotations.ApiStatus;
 import net.neoforged.neoforge.registries.RegisterEvent;
 
 public class PlacementModifiersImpl {
-    private static final java.util.Map<ResourceLocation, PlacementModifierType<?>> TYPES = new java.util.LinkedHashMap<>();
-    private static final java.util.Map<ResourceLocation, PlacementModifierType<?>> LEGACY_TYPES = new java.util.LinkedHashMap<>();
+    private static final java.util.Map<Identifier, PlacementModifierType<?>> TYPES = new java.util.LinkedHashMap<>();
+    private static final java.util.Map<Identifier, PlacementModifierType<?>> LEGACY_TYPES = new java.util.LinkedHashMap<>();
 
     public static PlacementModifierType<Stencil> STENCIL = registerLegacy(
             "stencil",
@@ -104,7 +104,7 @@ public class PlacementModifiersImpl {
     }
 
     public static <P extends PlacementModifier> PlacementModifierType<P> register(
-            ResourceLocation location,
+            Identifier location,
             MapCodec<P> codec,
             boolean withLegacyBCLib
     ) {
@@ -147,4 +147,3 @@ public class PlacementModifiersImpl {
         }
     }
 }
-

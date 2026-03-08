@@ -37,4 +37,3 @@ public interface MergeableBiomeSource<B extends BiomeSource> {
     B mergeWithBiomeSource(BiomeSource inputBiomeSource);
 
 }
-

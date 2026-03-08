@@ -3,7 +3,8 @@ package org.betterx.wover.testmod.recipe;
 import org.betterx.wover.complex.api.equipment.*;
 import org.betterx.wover.testmod.entrypoint.TestModWoverRecipe;
 
-import net.minecraft.world.item.*;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
 
 import org.jetbrains.annotations.ApiStatus;
 
@@ -13,16 +14,16 @@ public class TestEquipmentSet extends EquipmentSet {
     public TestEquipmentSet() {
         super(TestModWoverRecipe.C, "test_equipment_set", ToolTiers.DIAMOND_TOOL, ArmorTiers.TURTLE_ARMOR, Items.STONE);
 
-        add(ToolSlot.PICKAXE_SLOT, PickaxeItem::new);
-        add(ToolSlot.AXE_SLOT, AxeItem::new);
-        add(ToolSlot.SHOVEL_SLOT, ShovelItem::new);
-        add(ToolSlot.HOE_SLOT, HoeItem::new);
-        add(ToolSlot.SWORD_SLOT, SwordItem::new);
+        add(ToolSlot.PICKAXE_SLOT, (m, p) -> new Item(p));
+        add(ToolSlot.AXE_SLOT, (m, p) -> new Item(p));
+        add(ToolSlot.SHOVEL_SLOT, (m, p) -> new Item(p));
+        add(ToolSlot.HOE_SLOT, (m, p) -> new Item(p));
+        add(ToolSlot.SWORD_SLOT, (m, p) -> new Item(p));
 
-        add(ArmorSlot.HELMET_SLOT, ArmorItem::new);
-        add(ArmorSlot.CHESTPLATE_SLOT, ArmorItem::new);
-        add(ArmorSlot.LEGGINGS_SLOT, ArmorItem::new);
-        add(ArmorSlot.BOOTS_SLOT, ArmorItem::new);
+        add(ArmorSlot.HELMET_SLOT, (m, t, p) -> new Item(p));
+        add(ArmorSlot.CHESTPLATE_SLOT, (m, t, p) -> new Item(p));
+        add(ArmorSlot.LEGGINGS_SLOT, (m, t, p) -> new Item(p));
+        add(ArmorSlot.BOOTS_SLOT, (m, t, p) -> new Item(p));
     }
 
     @ApiStatus.Internal

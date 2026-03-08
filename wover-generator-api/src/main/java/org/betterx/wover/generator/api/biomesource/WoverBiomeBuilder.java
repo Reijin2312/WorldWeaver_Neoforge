@@ -11,7 +11,7 @@ import org.betterx.wover.tag.api.predefined.CommonBiomeTags;
 
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.BiomeTags;
 import net.minecraft.world.level.biome.Biome;
 
@@ -29,10 +29,10 @@ public interface WoverBiomeBuilder<B extends BiomeBuilder<B>> {
     B vertical(boolean vertical);
 
     static BiomeKey<Wrapped> wrappedKey(@NotNull ResourceKey<Biome> key) {
-        return new WrappedWoverBiomeKeyImpl(key.location());
+        return new WrappedWoverBiomeKeyImpl(key.identifier());
     }
 
-    static BiomeKey<WoverBiome> biomeKey(@NotNull ResourceLocation location) {
+    static BiomeKey<WoverBiome> biomeKey(@NotNull Identifier location) {
         return new WoverBiomeKeyImpl(location);
     }
 

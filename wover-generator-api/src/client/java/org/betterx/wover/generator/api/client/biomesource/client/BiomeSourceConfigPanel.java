@@ -9,8 +9,6 @@ import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.dimension.LevelStem;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
 public interface BiomeSourceConfigPanel<B extends BiomeSource, C extends BiomeSourceConfig<B>> {
     @FunctionalInterface
@@ -22,7 +20,6 @@ public interface BiomeSourceConfigPanel<B extends BiomeSource, C extends BiomeSo
         );
     }
 
-    @OnlyIn(Dist.CLIENT)
     LayoutComponent<?, ?> getPanel();
 
 

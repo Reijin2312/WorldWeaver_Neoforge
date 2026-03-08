@@ -1,9 +1,6 @@
 package org.betterx.wover.common.surface.api;
 
-import net.minecraft.core.Registry;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.chunk.ChunkGenerator;
-import net.minecraft.world.level.dimension.LevelStem;
 
 /**
  * If a ChunkGenerator implements this interface, we can use it to inject Surface
@@ -20,7 +17,7 @@ public interface InjectableSurfaceRules<G extends ChunkGenerator> {
      * the ones from our SurfaceRule Registry.
      *
      * @param dimensionRegistry The Registry holding the Dimension information for this world
-     * @param dimensionKey      The Dimension for which this injection is performed
+     * @param dimensionKey      The Dimension key string (e.g. minecraft:overworld)
      */
-    void wover_injectSurfaceRules(Registry<LevelStem> dimensionRegistry, ResourceKey<LevelStem> dimensionKey);
+    void wover_injectSurfaceRules(Object dimensionRegistry, String dimensionKey);
 }

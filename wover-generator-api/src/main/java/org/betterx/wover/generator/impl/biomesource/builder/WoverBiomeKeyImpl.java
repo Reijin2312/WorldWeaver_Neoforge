@@ -4,12 +4,12 @@ import org.betterx.wover.biome.api.BiomeKey;
 import org.betterx.wover.biome.api.builder.BiomeBootstrapContext;
 import org.betterx.wover.generator.api.biomesource.WoverBiomeBuilder;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import org.jetbrains.annotations.NotNull;
 
 public class WoverBiomeKeyImpl extends BiomeKey<WoverBiomeBuilder.WoverBiome> {
-    public WoverBiomeKeyImpl(@NotNull ResourceLocation location) {
+    public WoverBiomeKeyImpl(@NotNull Identifier location) {
         super(location);
     }
 

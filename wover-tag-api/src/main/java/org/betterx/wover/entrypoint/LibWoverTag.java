@@ -11,6 +11,7 @@ import org.betterx.wover.tag.impl.TagBootstrapContextImpl;
 import org.betterx.wover.tag.datagen.WoverTagDatagen;
 
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.data.event.GatherDataEvent;
 import static org.betterx.wover.events.impl.AbstractEvent.SYSTEM_PRIORITY;
 
 public class LibWoverTag {
@@ -18,7 +19,9 @@ public class LibWoverTag {
 
     public LibWoverTag(IEventBus modEventBus) {
         C.registerDatapackListener(modEventBus);
-        modEventBus.addListener(new WoverTagDatagen()::onGatherData);
+        WoverTagDatagen datagen = new WoverTagDatagen();
+        modEventBus.addListener(GatherDataEvent.Client.class, datagen::onGatherData);
+        modEventBus.addListener(GatherDataEvent.Server.class, datagen::onGatherData);
         WoverDataGenEntryPoint.registerAutoProvider(AutoBlockTagProvider::new);
         WoverDataGenEntryPoint.registerAutoProvider(AutoItemTagProvider::new);
         WoverDataGenEntryPoint.registerAutoProvider(AutoBiomeTagProvider::new);

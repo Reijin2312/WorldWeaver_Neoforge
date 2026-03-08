@@ -11,7 +11,7 @@ import org.betterx.wover.surface.api.noise.NoiseParameterManager;
 import org.betterx.wover.util.PriorityLinkedList;
 
 import net.minecraft.core.Registry;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.block.Blocks;
@@ -23,7 +23,7 @@ import net.neoforged.bus.api.IEventBus;
 @Mod("wover-surface-testmod")
 public class TestModWoverSurface {
     public static final ModCore C = ModCore.create("wover-surface-testmod");
-    public static final ResourceLocation ADDON_PACK = C.addDatapack(
+    public static final Identifier ADDON_PACK = C.addDatapack(
             "testpack",
             DatapackActivationType.DEFAULT_ENABLED
     );
@@ -32,7 +32,7 @@ public class TestModWoverSurface {
         C.registerDatapackListener(modEventBus);
         RandomSource rSource = new SingleThreadedRandomSource(9324765982365L);
         WorldLifecycle.WORLD_REGISTRY_READY.subscribe((registry, stage) -> {
-            Registry<AssignedSurfaceRule> surfaceRegistr = registry.registryOrThrow(SurfaceRuleRegistry.SURFACE_RULES_REGISTRY);
+            Registry<AssignedSurfaceRule> surfaceRegistr = registry.lookupOrThrow(SurfaceRuleRegistry.SURFACE_RULES_REGISTRY);
             C.log.info("Surface rule registry: " + Integer.toHexString(surfaceRegistr.hashCode()));
 
             if (stage != OnRegistryReady.Stage.FINAL) return;

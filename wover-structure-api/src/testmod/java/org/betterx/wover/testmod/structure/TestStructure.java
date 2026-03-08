@@ -1,6 +1,5 @@
 package org.betterx.wover.testmod.structure;
 
-import org.betterx.wover.entrypoint.LibWoverStructure;
 import org.betterx.wover.testmod.entrypoint.TestModWoverStructure;
 
 import net.minecraft.core.BlockPos;

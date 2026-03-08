@@ -36,15 +36,15 @@ public class SurfaceRuleUtil {
         Registry<AssignedSurfaceRule> registry = null;
         if (WorldState.registryAccess() != null)
             registry = WorldState.registryAccess()
-                                 .registry(SurfaceRuleRegistry.SURFACE_RULES_REGISTRY).orElse(null);
+                                 .lookup(SurfaceRuleRegistry.SURFACE_RULES_REGISTRY).orElse(null);
 
         if (registry == null) {
-            LibWoverSurface.C.LOG.warn("No Surface Rule Registry found. Skipping Surface Rule Injection for Biome {}", biomeKey.location());
+            LibWoverSurface.C.LOG.warn("No Surface Rule Registry found. Skipping Surface Rule Injection for Biome {}", biomeKey.identifier());
             return List.of();
         }
 
         var list = registry.stream()
-                           .filter(a -> a != null && a.biomeID != null && a.biomeID.equals(biomeKey.location()))
+                           .filter(a -> a != null && a.biomeID != null && a.biomeID.equals(biomeKey.identifier()))
                            .sorted((a, b) -> b.priority - a.priority)
                            .map(a -> a.ruleSource)
                            .toList();
@@ -106,7 +106,7 @@ public class SurfaceRuleUtil {
         LibWoverSurface.C.LOG.verbose(
                 "Merged {} additional Surface Rules for Dimension {} => {} ({}) using {}",
                 count,
-                dimensionKey.location(),
+                dimensionKey.identifier(),
                 additionalRules.size(),
                 sw.stop(),
                 source
@@ -141,14 +141,14 @@ public class SurfaceRuleUtil {
     ) {
         final Registry<LevelStem> dimensionRegistry = registries
                 .compositeAccess()
-                .registryOrThrow(Registries.LEVEL_STEM);
+                .lookupOrThrow(Registries.LEVEL_STEM);
 
         for (var entry : dimensionRegistry.entrySet()) {
             ResourceKey<LevelStem> dimensionKey = entry.getKey();
             LevelStem stem = entry.getValue();
 
             if (stem.generator() instanceof InjectableSurfaceRules<?> generator) {
-                generator.wover_injectSurfaceRules(dimensionRegistry, dimensionKey);
+                generator.wover_injectSurfaceRules(dimensionRegistry, dimensionKey.identifier().toString());
             }
         }
     }

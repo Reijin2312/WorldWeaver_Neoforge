@@ -4,7 +4,6 @@ import de.ambertation.wunderlib.ui.ColorHelper;
 import org.betterx.wover.biome.api.BiomeKey;
 import org.betterx.wover.biome.api.data.BiomeData;
 import org.betterx.wover.biome.impl.builder.BiomeSurfaceRuleBuilderImpl;
-import org.betterx.wover.biome.mixin.BiomeGenerationSettingsAccessor;
 import org.betterx.wover.feature.api.placed.BasePlacedFeatureKey;
 import org.betterx.wover.feature.api.placed.PlacedFeatureManager;
 import org.betterx.wover.structure.api.StructureKey;
@@ -13,7 +12,6 @@ import org.betterx.wover.tag.api.event.context.TagBootstrapContext;
 import org.betterx.wover.tag.api.predefined.CommonBiomeTags;
 
 import net.minecraft.core.Holder;
-import net.minecraft.core.HolderSet;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.worldgen.BiomeDefaultFeatures;
@@ -23,20 +21,24 @@ import net.minecraft.sounds.Music;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.tags.BiomeTags;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.attribute.AmbientAdditionsSettings;
+import net.minecraft.world.attribute.AmbientMoodSettings;
+import net.minecraft.world.attribute.AmbientParticle;
+import net.minecraft.world.attribute.AmbientSounds;
+import net.minecraft.world.attribute.BackgroundMusic;
+import net.minecraft.world.attribute.EnvironmentAttribute;
+import net.minecraft.world.attribute.EnvironmentAttributeMap;
+import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.biome.*;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.GenerationStep;
-import net.minecraft.world.level.levelgen.carver.ConfiguredWorldCarver;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 
-import com.google.common.collect.Lists;
-
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -181,8 +183,12 @@ public abstract class BiomeBuilder<B extends BiomeBuilder<B>> {
         private float temperature;
         private boolean hasPrecipitation;
         private final BiomeSpecialEffects.Builder fx = new BiomeSpecialEffects.Builder();
+        private final EnvironmentAttributeMap.Builder envFx = EnvironmentAttributeMap.builder();
         private final BiomeGenerationSettings.Builder generationSettings;
         private final MobSpawnSettings.Builder mobSpawnSettings = new MobSpawnSettings.Builder();
+        private Optional<Holder<SoundEvent>> ambientLoop = Optional.empty();
+        private Optional<AmbientMoodSettings> ambientMood = Optional.empty();
+        private @Nullable AmbientAdditionsSettings ambientAddition = null;
 
         protected VanillaBuilder(BiomeBootstrapContext context, BiomeKey<B> key) {
             super(context, key);
@@ -197,10 +203,10 @@ public abstract class BiomeBuilder<B extends BiomeBuilder<B>> {
                     bootstrapContext.lookup(Registries.CONFIGURED_CARVER)
             );
 
-            fx.fogColor(DEFAULT_FOG_COLOR);
-            fx.waterFogColor(DEFAULT_WATER_FOG_COLOR);
             fx.waterColor(DEFAULT_WATER_COLOR);
-            fx.skyColor(calculateSkyColor(temperature));
+            envFx.set(EnvironmentAttributes.FOG_COLOR, DEFAULT_FOG_COLOR);
+            envFx.set(EnvironmentAttributes.WATER_FOG_COLOR, DEFAULT_WATER_FOG_COLOR);
+            envFx.set(EnvironmentAttributes.SKY_COLOR, calculateSkyColor(temperature));
         }
 
 
@@ -282,26 +288,25 @@ public abstract class BiomeBuilder<B extends BiomeBuilder<B>> {
             return feature(BiomeDefaultFeatures::addNetherDefaultOres);
         }
 
-        public B carver(GenerationStep.Carving step, ResourceKey<ConfiguredWorldCarver<?>> carver) {
+        public B carver(ResourceKey<net.minecraft.world.level.levelgen.carver.ConfiguredWorldCarver<?>> carver) {
             generationSettings.addCarver(
-                    step,
                     bootstrapContext.lookup(Registries.CONFIGURED_CARVER).getOrThrow(carver)
             );
             return (B) this;
         }
 
-        public B carver(GenerationStep.Carving step, Holder<ConfiguredWorldCarver<?>> carver) {
-            generationSettings.addCarver(step, carver);
+        public B carver(Holder<net.minecraft.world.level.levelgen.carver.ConfiguredWorldCarver<?>> carver) {
+            generationSettings.addCarver(carver);
             return (B) this;
         }
 
         public B fogColor(int color) {
-            fx.fogColor(color);
+            envFx.set(EnvironmentAttributes.FOG_COLOR, color);
             return (B) this;
         }
 
         public B fogColor(int r, int g, int b) {
-            fx.fogColor(ColorHelper.color(r, g, b));
+            envFx.set(EnvironmentAttributes.FOG_COLOR, ColorHelper.color(r, g, b));
             return (B) this;
         }
 
@@ -319,7 +324,7 @@ public abstract class BiomeBuilder<B extends BiomeBuilder<B>> {
         }
 
         public B waterFogColor(int color) {
-            fx.waterFogColor(color);
+            envFx.set(EnvironmentAttributes.WATER_FOG_COLOR, color);
             return (B) this;
         }
 
@@ -328,7 +333,12 @@ public abstract class BiomeBuilder<B extends BiomeBuilder<B>> {
         }
 
         public B skyColor(int color) {
-            fx.skyColor(color);
+            envFx.set(EnvironmentAttributes.SKY_COLOR, color);
+            return (B) this;
+        }
+
+        public <T> B environmentAttribute(EnvironmentAttribute<T> attribute, T value) {
+            envFx.set(attribute, value);
             return (B) this;
         }
 
@@ -380,23 +390,35 @@ public abstract class BiomeBuilder<B extends BiomeBuilder<B>> {
          * @return this builder.
          */
         public B particles(ParticleOptions particle, float probability) {
-            particles(new AmbientParticleSettings(particle, probability));
+            envFx.set(EnvironmentAttributes.AMBIENT_PARTICLES, AmbientParticle.of(particle, probability));
             return (B) this;
         }
 
-        public B particles(AmbientParticleSettings ambientParticleSettings) {
-            fx.ambientParticle(ambientParticleSettings);
+        public B particles(AmbientParticle ambientParticleSettings) {
+            envFx.set(EnvironmentAttributes.AMBIENT_PARTICLES, List.of(ambientParticleSettings));
             return (B) this;
         }
 
+        private void updateAmbientSounds() {
+            envFx.set(
+                    EnvironmentAttributes.AMBIENT_SOUNDS,
+                    new AmbientSounds(
+                            ambientLoop,
+                            ambientMood,
+                            ambientAddition == null ? List.of() : List.of(ambientAddition)
+                    )
+            );
+        }
 
         public B loop(Holder<SoundEvent> holder) {
-            fx.ambientLoopSound(holder);
+            ambientLoop = Optional.of(holder);
+            updateAmbientSounds();
             return (B) this;
         }
 
         public B mood(AmbientMoodSettings ambientMoodSettings) {
-            fx.ambientMoodSound(ambientMoodSettings);
+            ambientMood = Optional.of(ambientMoodSettings);
+            updateAmbientSounds();
             return (B) this;
         }
 
@@ -409,7 +431,8 @@ public abstract class BiomeBuilder<B extends BiomeBuilder<B>> {
         }
 
         public B additions(AmbientAdditionsSettings ambientAdditionsSettings) {
-            fx.ambientAdditionsSound(ambientAdditionsSettings);
+            ambientAddition = ambientAdditionsSettings;
+            updateAmbientSounds();
             return (B) this;
         }
 
@@ -422,7 +445,10 @@ public abstract class BiomeBuilder<B extends BiomeBuilder<B>> {
         }
 
         public B music(@Nullable Music music) {
-            fx.backgroundMusic(music);
+            envFx.set(
+                    EnvironmentAttributes.BACKGROUND_MUSIC,
+                    music == null ? BackgroundMusic.EMPTY : new BackgroundMusic(music)
+            );
             return (B) this;
         }
 
@@ -461,7 +487,8 @@ public abstract class BiomeBuilder<B extends BiomeBuilder<B>> {
         public B spawn(EntityType<?> entityType, int weight, int minGroupCount, int maxGroupCount) {
             mobSpawnSettings.addSpawn(
                     entityType.getCategory(),
-                    new MobSpawnSettings.SpawnerData(entityType, weight, minGroupCount, maxGroupCount)
+                    weight,
+                    new MobSpawnSettings.SpawnerData(entityType, minGroupCount, maxGroupCount)
             );
             return (B) this;
         }
@@ -488,15 +515,6 @@ public abstract class BiomeBuilder<B extends BiomeBuilder<B>> {
 
 
         private static BiomeGenerationSettings fixGenerationSettings(BiomeGenerationSettings settings) {
-            // Some biome modification pipelines cannot handle an empty carver map,
-            // so create an empty HolderSet for every possible step.
-            if (settings instanceof BiomeGenerationSettingsAccessor acc) {
-                Map<GenerationStep.Carving, HolderSet<ConfiguredWorldCarver<?>>> carvers = new HashMap<>(acc.wover_getCarvers());
-                for (GenerationStep.Carving step : GenerationStep.Carving.values()) {
-                    carvers.computeIfAbsent(step, __ -> HolderSet.direct(Lists.newArrayList()));
-                }
-                acc.wover_setCarvers(Map.copyOf(carvers));
-            }
             return settings;
         }
 
@@ -509,6 +527,7 @@ public abstract class BiomeBuilder<B extends BiomeBuilder<B>> {
             vanillaBuilder.temperatureAdjustment(temperatureModifier);
 
             vanillaBuilder.generationSettings(fixGenerationSettings(generationSettings.build()));
+            vanillaBuilder.putAttributes(envFx);
             vanillaBuilder.specialEffects(fx.build());
             vanillaBuilder.mobSpawnSettings(mobSpawnSettings.build());
 

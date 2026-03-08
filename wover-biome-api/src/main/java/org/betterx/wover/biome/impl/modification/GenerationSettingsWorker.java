@@ -8,14 +8,12 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeGenerationSettings;
 import net.minecraft.world.level.levelgen.GenerationStep;
-import net.minecraft.world.level.levelgen.carver.ConfiguredWorldCarver;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -23,32 +21,15 @@ import java.util.stream.Stream;
 import org.jetbrains.annotations.NotNull;
 
 public class GenerationSettingsWorker {
-    private final Registry<ConfiguredWorldCarver<?>> carvers;
     private final Registry<PlacedFeature> features;
     private final BiomeGenerationSettings generationSettings;
     private final Biome biome;
-    Map<GenerationStep.Carving, HolderSet<ConfiguredWorldCarver<?>>> customizedCarvers;
     List<HolderSet<PlacedFeature>> customizedFeatures;
 
     public GenerationSettingsWorker(RegistryAccess registries, Biome biome) {
         this.biome = biome;
         this.generationSettings = biome.getGenerationSettings();
-        this.carvers = registries.registryOrThrow(Registries.CONFIGURED_CARVER);
-        this.features = registries.registryOrThrow(Registries.PLACED_FEATURE);
-    }
-
-    private void unfreezeCarvers() {
-        if (customizedCarvers == null) {
-            customizedCarvers = new EnumMap<>(GenerationStep.Carving.class);
-            generationSettings.carvers = customizedCarvers;
-        }
-    }
-
-    private void freezeCarvers() {
-        if (customizedCarvers != null) {
-            generationSettings.carvers = ImmutableMap.copyOf(customizedCarvers);
-            customizedCarvers = null;
-        }
+        this.features = registries.lookupOrThrow(Registries.PLACED_FEATURE);
     }
 
 
@@ -69,8 +50,7 @@ public class GenerationSettingsWorker {
     }
 
     public boolean finished() {
-        boolean res = customizedCarvers != null || customizedFeatures != null;
-        freezeCarvers();
+        boolean res = customizedFeatures != null;
         freezeFeatures();
         return res;
     }

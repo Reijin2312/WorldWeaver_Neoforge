@@ -47,7 +47,7 @@ public class AutoBlockTagProvider extends WoverTagProvider.ForBlocks implements 
         BuiltInRegistries.BLOCK
                 .entrySet()
                 .stream()
-                .filter(entry -> modIDs.contains(entry.getKey().location().getNamespace()))
+                .filter(entry -> modIDs.contains(entry.getKey().identifier().getNamespace()))
                 .forEach(entry -> {
                     addBlockTags(provider, entry.getKey(), entry.getValue());
                 });
@@ -62,13 +62,13 @@ public class AutoBlockTagProvider extends WoverTagProvider.ForBlocks implements 
         try {
             var method = block.getClass().getMethod(
                     "registerBlockTags",
-                    net.minecraft.resources.ResourceLocation.class,
+                    net.minecraft.resources.Identifier.class,
                     org.betterx.wover.tag.api.event.context.TagBootstrapContext.class
             );
-            method.invoke(block, blockKey.location(), provider);
+            method.invoke(block, blockKey.identifier(), provider);
         } catch (NoSuchMethodException ignored) {
         } catch (Exception e) {
-            LibWoverTag.C.LOG.warn("Failed to call registerBlockTags on {}", blockKey.location(), e);
+            LibWoverTag.C.LOG.warn("Failed to call registerBlockTags on {}", blockKey.identifier(), e);
         }
     }
 

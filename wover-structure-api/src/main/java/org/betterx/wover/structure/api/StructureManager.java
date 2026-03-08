@@ -15,7 +15,7 @@ import net.minecraft.core.HolderGetter;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.StructureSet;
 import net.minecraft.world.level.levelgen.structure.StructureType;
@@ -44,26 +44,26 @@ public class StructureManager {
             = StructureManagerImpl.RANDOM_NBT_STRUCTURE_PIECE;
 
     /**
-     * Creates a {@link StructureKey} for the given {@link ResourceLocation}.
+     * Creates a {@link StructureKey} for the given {@link Identifier}.
      *
      * @param location The location of the {@link Structure}
      * @return The {@link StructureKey}
      */
     public static <S extends Structure> StructureKey.Simple<S> structure(
-            ResourceLocation location,
+            Identifier location,
             @NotNull StructureTypeKey<S> type
     ) {
         return new SimpleStructureKeyImpl<>(location, type);
     }
 
     /**
-     * Creates a {@link StructureKey} and {@link StructureTypeKey} for the given {@link ResourceLocation}.
+     * Creates a {@link StructureKey} and {@link StructureTypeKey} for the given {@link Identifier}.
      *
      * @param location The location of the {@link Structure}
      * @return The {@link StructureKey}
      */
     public static <S extends Structure> StructureKey.Simple<S> structure(
-            ResourceLocation location,
+            Identifier location,
             @NotNull StructureTypeKey.StructureFactory<S> structureFactory,
             @NotNull MapCodec<S> codec
     ) {
@@ -71,17 +71,17 @@ public class StructureManager {
     }
 
     /**
-     * Creates a {@link StructureKey} and {@link StructureTypeKey} for the given {@link ResourceLocation}.
+     * Creates a {@link StructureKey} and {@link StructureTypeKey} for the given {@link Identifier}.
      * This method will create a {@link Codec} for the {@link Structure} using the given {@link Structure#simpleCodec}.
      * This codec assumes, that the <b>{@link Structure} has no additional data</b>. If this assumption is not
-     * valid you should use {@link #structure(ResourceLocation, StructureTypeKey.StructureFactory, MapCodec)}
+     * valid you should use {@link #structure(Identifier, StructureTypeKey.StructureFactory, MapCodec)}
      * instead.
      *
      * @param location The location of the {@link Structure}
      * @return The {@link StructureKey}
      */
     public static <S extends Structure> StructureKey.Simple<S> structure(
-            ResourceLocation location,
+            Identifier location,
             @NotNull StructureTypeKey.StructureFactory<S> structureFactory
     ) {
         return new SimpleStructureKeyImpl<>(
@@ -96,22 +96,22 @@ public class StructureManager {
 
     /**
      * Creates a {@link StructureKey} for a {@link net.minecraft.world.level.levelgen.structure.structures.JigsawStructure}
-     * at the given {@link ResourceLocation}.
+     * at the given {@link Identifier}.
      *
      * @param location The location of the {@link Structure}
      * @return The {@link StructureKey}
      */
-    public static <S extends Structure> StructureKey.Jigsaw jigsaw(ResourceLocation location) {
+    public static <S extends Structure> StructureKey.Jigsaw jigsaw(Identifier location) {
         return new JigsawKeyImpl(location);
     }
 
     /**
-     * Creates a {@link StructureKey} for the given {@link ResourceLocation}.
+     * Creates a {@link StructureKey} for the given {@link Identifier}.
      *
      * @param location The location of the {@link Structure}
      * @return The {@link StructureKey}
      */
-    public static <S extends Structure> StructureKey.RandomNbt randomNbt(ResourceLocation location) {
+    public static <S extends Structure> StructureKey.RandomNbt randomNbt(Identifier location) {
         return new RandomNbtKeyImpl(location);
     }
 
@@ -152,17 +152,17 @@ public class StructureManager {
 
     /**
      * Registers a new  {@link net.minecraft.world.level.levelgen.structure.StructureType}
-     * for the given {@link ResourceLocation}. This method will create a {@link Codec}
+     * for the given {@link Identifier}. This method will create a {@link Codec}
      * for the {@link Structure} using the given {@link Structure#simpleCodec}. The codec
      * assumes, that the <b>{@link Structure} has no additional data</b>. If this assumption is not
-     * valid you should use {@link #registerType(ResourceLocation, StructureTypeKey.StructureFactory, MapCodec)}
+     * valid you should use {@link #registerType(Identifier, StructureTypeKey.StructureFactory, MapCodec)}
      * instead.
      *
      * @param location The location of the {@link Structure}
      * @return The {@link StructureKey}
      */
     public static <S extends Structure> @NotNull StructureTypeKey<S> registerType(
-            @NotNull ResourceLocation location,
+            @NotNull Identifier location,
             @NotNull StructureTypeKey.StructureFactory<S> structureFactory
     ) {
         return StructureManagerImpl.registerType(
@@ -173,7 +173,7 @@ public class StructureManager {
     }
 
     public static <S extends Structure> @NotNull StructureTypeKey<S> registerType(
-            @NotNull ResourceLocation location,
+            @NotNull Identifier location,
             @NotNull StructureTypeKey.StructureFactory<S> structureFactory,
             @NotNull MapCodec<S> codec
     ) {
@@ -181,7 +181,7 @@ public class StructureManager {
     }
 
     public static @NotNull StructurePieceType registerPiece(
-            @NotNull ResourceLocation location,
+            @NotNull Identifier location,
             @NotNull StructurePieceType pieceType
     ) {
         return StructureManagerImpl.registerPiece(location, pieceType);

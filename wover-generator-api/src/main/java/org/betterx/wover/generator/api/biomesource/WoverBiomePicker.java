@@ -34,13 +34,13 @@ public class WoverBiomePicker {
         this(
                 WorldState.allStageRegistryAccess() == null
                         ? null
-                        : WorldState.allStageRegistryAccess().registry(Registries.BIOME).orElse(null),
+                        : WorldState.allStageRegistryAccess().lookup(Registries.BIOME).orElse(null),
                 fallbackBiome
         );
     }
 
     public WoverBiomePicker(Registry<Biome> biomeRegistry, ResourceKey<Biome> fallbackBiome) {
-        this(biomeRegistry != null ? biomeRegistry.asLookup() : null, fallbackBiome);
+        this((HolderGetter<Biome>) biomeRegistry, fallbackBiome);
     }
 
     public WoverBiomePicker(HolderGetter<Biome> biomeRegistry, ResourceKey<Biome> fallbackBiome) {
@@ -131,7 +131,7 @@ public class WoverBiomePicker {
 
                 for (PickableBiome builtBiome : new ArrayList<>(registeredBiomes.values())) {
                     if (!beforeList.contains(builtBiome)) {
-                        LibWoverWorldGenerator.C.log.verbose(" - " + builtBiome.biomeData.biomeKey.location() + ", subbiomes=" + builtBiome.subbiomes.size());
+                        LibWoverWorldGenerator.C.log.verbose(" - " + builtBiome.biomeData.biomeKey.identifier() + ", subbiomes=" + builtBiome.subbiomes.size());
                     }
                 }
             }
@@ -209,10 +209,10 @@ public class WoverBiomePicker {
         @Override
         public String toString() {
             return "PickableBiome{" +
-                    "key=" + biomeData.biomeKey.location() +
+                    "key=" + biomeData.biomeKey.identifier() +
                     ", alternatives=" + subbiomes.size() +
-                    ", edge=" + (edge != null ? edge.biomeData.biomeKey.location() : "null") +
-                    ", parent=" + (parent != null ? parent.biomeData.biomeKey.location() : "null") +
+                    ", edge=" + (edge != null ? edge.biomeData.biomeKey.identifier() : "null") +
+                    ", parent=" + (parent != null ? parent.biomeData.biomeKey.identifier() : "null") +
                     ", isValid=" + isValid +
                     '}';
         }

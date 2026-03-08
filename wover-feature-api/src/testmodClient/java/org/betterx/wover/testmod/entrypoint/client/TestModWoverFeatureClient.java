@@ -3,10 +3,9 @@ package org.betterx.wover.testmod.entrypoint.client;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 
-@EventBusSubscriber(modid = "wover-feature-testmod", bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+@EventBusSubscriber(modid = "wover-feature-testmod", value = Dist.CLIENT)
 public class TestModWoverFeatureClient {
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {

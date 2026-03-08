@@ -6,7 +6,7 @@ import org.betterx.wover.structure.api.StructureNBT;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.ServerLevelAccessor;
@@ -22,7 +22,7 @@ public class FeatureTemplateImpl extends StructureNBT implements TemplateFeature
     public static final Codec<TemplateFeatureConfig.FeatureTemplate> CODEC =
             RecordCodecBuilder.create((instance) ->
                     instance.group(
-                                    ResourceLocation.CODEC
+                                    Identifier.CODEC
                                             .fieldOf("location")
                                             .forGetter((cfg) -> cfg.getLocation()),
                                     Codec
@@ -35,7 +35,7 @@ public class FeatureTemplateImpl extends StructureNBT implements TemplateFeature
             );
     public final int offsetY;
 
-    protected FeatureTemplateImpl(ResourceLocation location, int offsetY) {
+    protected FeatureTemplateImpl(Identifier location, int offsetY) {
         super(location);
         this.offsetY = offsetY;
     }
@@ -43,13 +43,13 @@ public class FeatureTemplateImpl extends StructureNBT implements TemplateFeature
     private static final Map<String, FeatureTemplateImpl> READER_CACHE = Maps.newHashMap();
 
     public static TemplateFeatureConfig.FeatureTemplate createTemplate(
-            ResourceLocation location
+            Identifier location
     ) {
         return createTemplate(location, 0);
     }
 
     public static TemplateFeatureConfig.FeatureTemplate createTemplate(
-            ResourceLocation location,
+            Identifier location,
             int offsetY
     ) {
         String key = location.toString() + "::" + offsetY;
@@ -112,7 +112,7 @@ public class FeatureTemplateImpl extends StructureNBT implements TemplateFeature
     }
 
     @Override
-    public ResourceLocation getLocation() {
+    public Identifier getLocation() {
         return location;
     }
 }

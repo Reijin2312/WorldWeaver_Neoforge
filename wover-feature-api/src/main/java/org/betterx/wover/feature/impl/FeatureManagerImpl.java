@@ -8,7 +8,7 @@ import org.betterx.wover.legacy.api.LegacyHelper;
 import com.mojang.serialization.Codec;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
@@ -25,7 +25,7 @@ public class FeatureManagerImpl {
 
 
     public static <C extends FeatureConfiguration, F extends Feature<C>> F register(
-            @NotNull ResourceLocation id,
+            @NotNull Identifier id,
             @NotNull F feature
     ) {
         return register(createKey(id), feature);
@@ -40,20 +40,20 @@ public class FeatureManagerImpl {
     }
 
     private static <C extends FeatureConfiguration, F extends Feature<C>> F registerWithLegacy(
-            @NotNull ResourceLocation id,
+            @NotNull Identifier id,
             @NotNull Function<Codec<C>, F> feature,
             Codec<C> codec
     ) {
         final var key = createKey(id);
         F res = register(key, feature.apply(codec));
         if (LegacyHelper.isLegacyEnabled()) {
-            register(LegacyHelper.BCLIB_CORE.convertNamespace(key.location()), feature.apply(codec));
+            register(LegacyHelper.BCLIB_CORE.convertNamespace(key.identifier()), feature.apply(codec));
         }
         return res;
     }
 
     @NotNull
-    public static ResourceKey<Feature<?>> createKey(ResourceLocation location) {
+    public static ResourceKey<Feature<?>> createKey(Identifier location) {
         return ResourceKey.create(
                 Registries.FEATURE,
                 location
@@ -99,7 +99,7 @@ public class FeatureManagerImpl {
 
     public static void register(RegisterEvent event) {
         if (event.getRegistryKey().equals(Registries.FEATURE)) {
-            event.register(Registries.FEATURE, helper -> FEATURES.forEach((k, v) -> helper.register(k.location(), v)));
+            event.register(Registries.FEATURE, helper -> FEATURES.forEach((k, v) -> helper.register(k.identifier(), v)));
         }
     }
 

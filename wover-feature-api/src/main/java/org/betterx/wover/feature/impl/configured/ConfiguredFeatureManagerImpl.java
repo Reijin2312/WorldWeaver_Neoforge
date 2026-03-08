@@ -48,7 +48,7 @@ public class ConfiguredFeatureManagerImpl {
                 return growable.grow(level, pos, random, config);
             }
         }
-        
+
         if (chunkGenerator == null && level instanceof ServerLevel sLevel) {
             chunkGenerator = sLevel.getChunkSource().getGenerator();
         }

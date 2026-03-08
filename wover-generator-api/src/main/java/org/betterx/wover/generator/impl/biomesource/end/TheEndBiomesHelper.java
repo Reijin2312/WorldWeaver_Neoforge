@@ -134,19 +134,19 @@ public class TheEndBiomesHelper {
     public static Holder<Biome> resolveHolder(ResourceKey<Biome> key, Holder<Biome> fallback) {
         if (key == null) return fallback;
         RegistryAccess access = WorldState.allStageRegistryAccess();
-        Registry<Biome> registry = access == null ? null : access.registry(Registries.BIOME).orElse(null);
+        Registry<Biome> registry = access == null ? null : access.lookup(Registries.BIOME).orElse(null);
         return registry == null
                 ? fallback
-                : registry.getHolder(key).map(holder -> (Holder<Biome>) holder).orElse(fallback);
+                : registry.get(key).map(holder -> (Holder<Biome>) holder).orElse(fallback);
     }
 
     @ApiStatus.Internal
     public static void addAllPossibleBiomes(Collection<Holder<Biome>> holders) {
         RegistryAccess access = WorldState.allStageRegistryAccess();
-        Registry<Biome> registry = access == null ? null : access.registry(Registries.BIOME).orElse(null);
+        Registry<Biome> registry = access == null ? null : access.lookup(Registries.BIOME).orElse(null);
         if (registry == null) return;
         for (ResourceKey<Biome> key : allKeys()) {
-            registry.getHolder(key).ifPresent(holders::add);
+            registry.get(key).ifPresent(holders::add);
         }
     }
 

@@ -10,7 +10,6 @@ import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.dimension.LevelStem;
-import net.minecraft.world.level.levelgen.WorldDimensions;
 
 public interface EnforceableChunkGenerator<G extends ChunkGenerator> {
     Registry<LevelStem> enforceGeneratorInWorldGenSettings(

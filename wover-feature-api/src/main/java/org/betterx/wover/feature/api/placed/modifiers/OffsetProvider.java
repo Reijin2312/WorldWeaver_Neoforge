@@ -3,7 +3,6 @@ package org.betterx.wover.feature.api.placed.modifiers;
 import org.betterx.wover.feature.impl.placed.modifiers.PlacementModifiersImpl;
 import org.betterx.wover.math.api.valueproviders.Vec3iProvider;
 
-import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;

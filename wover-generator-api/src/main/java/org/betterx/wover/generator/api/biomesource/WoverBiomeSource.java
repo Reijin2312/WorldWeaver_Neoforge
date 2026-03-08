@@ -18,14 +18,17 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeSource;
+import net.minecraft.world.level.biome.Climate;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 
 import com.google.common.base.Stopwatch;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public abstract class WoverBiomeSource extends BiomeSource implements
         ReloadableBiomeSource,
@@ -34,6 +37,9 @@ public abstract class WoverBiomeSource extends BiomeSource implements
         MergeableBiomeSource<WoverBiomeSource> {
     private boolean didCreatePickers;
     Set<Holder<Biome>> dynamicPossibleBiomes;
+    @Nullable
+    private BiomeSource fallbackBiomeSource;
+    private Set<ResourceKey<Biome>> managedPossibleBiomeKeys;
     protected long currentSeed;
     protected int maxHeight;
 
@@ -53,6 +59,8 @@ public abstract class WoverBiomeSource extends BiomeSource implements
     public WoverBiomeSource(long seed) {
         didCreatePickers = false;
         dynamicPossibleBiomes = Set.of();
+        fallbackBiomeSource = null;
+        managedPossibleBiomeKeys = Set.of();
         currentSeed = seed;
     }
 
@@ -140,6 +148,62 @@ public abstract class WoverBiomeSource extends BiomeSource implements
         return true;
     }
 
+    private void rememberManagedPossibleBiomeKeys() {
+        if (!managedPossibleBiomeKeys.isEmpty() || dynamicPossibleBiomes == null || dynamicPossibleBiomes.isEmpty()) {
+            return;
+        }
+
+        HashSet<ResourceKey<Biome>> keys = new HashSet<>();
+        for (Holder<Biome> biomeHolder : dynamicPossibleBiomes) {
+            biomeHolder.unwrapKey().ifPresent(keys::add);
+        }
+        this.managedPossibleBiomeKeys = keys;
+    }
+
+    private boolean isWoverManagedBiome(@Nullable Holder<Biome> biomeHolder) {
+        if (biomeHolder == null) {
+            return false;
+        }
+
+        if (biomeHolder.unwrapKey().isPresent()) {
+            return managedPossibleBiomeKeys.contains(biomeHolder.unwrapKey().orElseThrow());
+        }
+
+        return dynamicPossibleBiomes.contains(biomeHolder);
+    }
+
+    protected final Holder<Biome> applyFallbackBiomeSource(
+            Holder<Biome> biome,
+            int biomeX,
+            int biomeY,
+            int biomeZ,
+            Climate.Sampler sampler
+    ) {
+        final BiomeSource fallbackSource = this.fallbackBiomeSource;
+        if (fallbackSource == null || fallbackSource == this) {
+            return biome;
+        }
+
+        try {
+            final Holder<Biome> fallbackBiome = fallbackSource.getNoiseBiome(biomeX, biomeY, biomeZ, sampler);
+            // Prefer the external biome source for biomes Wover did not originally manage.
+            if (fallbackBiome != null && !isWoverManagedBiome(fallbackBiome)) {
+                return fallbackBiome;
+            }
+        } catch (Throwable ignored) {
+            // If the fallback source is not ready yet, keep Wover's result.
+        }
+
+        return biome;
+    }
+
+    private void setFallbackBiomeSource(BiomeSource source) {
+        if (source == this || source instanceof WoverBiomeSource) {
+            return;
+        }
+        this.fallbackBiomeSource = source;
+    }
+
 
     protected final void rebuildBiomes(boolean force) {
         if (!force && didCreatePickers) return;
@@ -155,6 +219,7 @@ public abstract class WoverBiomeSource extends BiomeSource implements
         if (this.dynamicPossibleBiomes == null) {
             this.dynamicPossibleBiomes = Set.of();
         }
+        rememberManagedPossibleBiomeKeys();
         this.didCreatePickers = true;
 
         onFinishBiomeRebuild(pickers);
@@ -177,6 +242,12 @@ public abstract class WoverBiomeSource extends BiomeSource implements
 
     @Override
     public WoverBiomeSource mergeWithBiomeSource(BiomeSource inputBiomeSource) {
+        if (managedPossibleBiomeKeys.isEmpty()) {
+            rebuildBiomes(false);
+            rememberManagedPossibleBiomeKeys();
+        }
+        setFallbackBiomeSource(inputBiomeSource);
+
         Stopwatch sw = Stopwatch.createStarted();
         RegistryAccess access = WorldState.registryAccess();
         if (access == null) {
@@ -188,7 +259,7 @@ public abstract class WoverBiomeSource extends BiomeSource implements
                 return this;
             }
         }
-        final Registry<Biome> biomes = access.registryOrThrow(Registries.BIOME);
+        final Registry<Biome> biomes = access.lookupOrThrow(Registries.BIOME);
 
         final BiomeTagModificationWorker biomeTagWorker = new BiomeTagModificationWorker();
         int biomesAdded = 0;
