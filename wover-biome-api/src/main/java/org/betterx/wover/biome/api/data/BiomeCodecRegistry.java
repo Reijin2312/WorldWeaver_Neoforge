@@ -1,6 +1,7 @@
 package org.betterx.wover.biome.api.data;
 
 import org.betterx.wover.biome.impl.data.BiomeCodecRegistryImpl;
+import org.betterx.wover.core.api.registry.BuiltInRegistryManager;
 import org.betterx.wover.core.api.registry.DatapackRegistryBuilder;
 import org.betterx.wover.entrypoint.LibWoverSurface;
 
@@ -13,11 +14,16 @@ import net.minecraft.util.KeyDispatchDataCodec;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.util.function.Function;
+
 public class BiomeCodecRegistry {
     public static final ResourceKey<Registry<MapCodec<? extends BiomeData>>> BIOME_CODEC_REGISTRY =
             DatapackRegistryBuilder.createRegistryKey(LibWoverSurface.C.id("wover/biome_codec"));
 
-    public static final Registry<MapCodec<? extends BiomeData>> BIOME_CODECS = BiomeCodecRegistryImpl.BIOME_CODECS;
+    public static final Registry<MapCodec<? extends BiomeData>> BIOME_CODECS = BuiltInRegistryManager.createRegistry(
+            BiomeCodecRegistry.BIOME_CODEC_REGISTRY,
+            r -> null
+    );
 
     public static MapCodec<? extends BiomeData> register(
             ResourceLocation location,
