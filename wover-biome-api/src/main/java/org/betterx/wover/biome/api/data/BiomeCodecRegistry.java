@@ -1,6 +1,7 @@
 package org.betterx.wover.biome.api.data;
 
 import org.betterx.wover.biome.impl.data.BiomeCodecRegistryImpl;
+import org.betterx.wover.core.api.registry.BuiltInRegistryManager;
 import org.betterx.wover.core.api.registry.DatapackRegistryBuilder;
 import org.betterx.wover.entrypoint.LibWoverSurface;
 
@@ -17,13 +18,16 @@ public class BiomeCodecRegistry {
     public static final ResourceKey<Registry<MapCodec<? extends BiomeData>>> BIOME_CODEC_REGISTRY =
             DatapackRegistryBuilder.createRegistryKey(LibWoverSurface.C.id("wover/biome_codec"));
 
-    public static final Registry<MapCodec<? extends BiomeData>> BIOME_CODECS = BiomeCodecRegistryImpl.BIOME_CODECS;
+    public static final Registry<MapCodec<? extends BiomeData>> BIOME_CODECS = BuiltInRegistryManager.createRegistry(
+            BIOME_CODEC_REGISTRY,
+            registry -> null
+    );
 
     public static MapCodec<? extends BiomeData> register(
             ResourceLocation location,
             KeyDispatchDataCodec<? extends BiomeData> keyDispatchDataCodec
     ) {
-        return BiomeCodecRegistryImpl.register(BiomeCodecRegistryImpl.BIOME_CODECS, location, keyDispatchDataCodec);
+        return BiomeCodecRegistryImpl.register(BIOME_CODECS, location, keyDispatchDataCodec);
     }
 
     public static MapCodec<? extends BiomeData> register(
@@ -32,7 +36,7 @@ public class BiomeCodecRegistry {
             @Nullable KeyDispatchDataCodec<? extends BiomeData> networkKeyDispatchDataCodec
     ) {
         return BiomeCodecRegistryImpl.register(
-                BiomeCodecRegistryImpl.BIOME_CODECS,
+                BIOME_CODECS,
                 location,
                 keyDispatchDataCodec,
                 networkKeyDispatchDataCodec

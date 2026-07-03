@@ -25,10 +25,7 @@ public class BiomeCodecRegistryImpl {
             registry -> null
     );
 
-    public static final Registry<MapCodec<? extends BiomeData>> BIOME_CODECS = BuiltInRegistryManager.createRegistry(
-            BiomeCodecRegistry.BIOME_CODEC_REGISTRY,
-            BiomeCodecRegistryImpl::onBootstrap
-    );
+    public static final Registry<MapCodec<? extends BiomeData>> BIOME_CODECS = BiomeCodecRegistry.BIOME_CODECS;
 
     public static final Codec<BiomeData> CODEC = BIOME_CODECS
             .byNameCodec()
