@@ -40,6 +40,9 @@ config="wover.core.mixins.common.json"
 config="wover.datagen.mixins.common.json"
 
 [[mixins]]
+config="wover.common.mixins.common.json"
+
+[[mixins]]
 config="wover.event.mixins.common.json"
 
 [[mixins]]

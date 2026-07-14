@@ -1,10 +1,13 @@
 package org.betterx.wover.generator.impl.chunkgenerator;
 
 import org.betterx.wover.common.generator.api.chunkgenerator.RestorableBiomeSource;
+import org.betterx.wover.common.generator.api.chunkgenerator.RebuildableFeaturesPerStep;
+import org.betterx.wover.common.generator.impl.compat.LithostitchedBiomeSourceCompat;
 import org.betterx.wover.entrypoint.LibWoverWorldGenerator;
 import org.betterx.wover.events.api.WorldLifecycle;
 import org.betterx.wover.legacy.api.LegacyHelper;
 import org.betterx.wover.state.api.WorldState;
+import org.betterx.wover.generator.api.biomesource.WoverBiomeSource;
 
 import com.mojang.serialization.Lifecycle;
 import net.minecraft.core.*;
@@ -34,7 +37,47 @@ public class WoverChunkGeneratorImpl {
     public static void initialize() {
         WorldLifecycle.MINECRAFT_SERVER_READY.subscribe(WoverChunkGeneratorImpl::restoreInitialBiomeSourceInAllDimensions);
         WorldLifecycle.ON_DIMENSION_LOAD.subscribe(WoverChunkGeneratorImpl::repairBiomeSourceInAllDimensions);
+        WorldLifecycle.BEFORE_CREATING_LEVELS.subscribe(WoverChunkGeneratorImpl::initializeExternalBiomeSources);
         WorldLifecycle.BEFORE_CREATING_LEVELS.subscribe(WoverChunkGeneratorImpl::printInfo, -1000);
+    }
+
+    private static void initializeExternalBiomeSources(
+            LevelStorageSource.LevelStorageAccess ignoredStorageAccess,
+            PackRepository ignoredPackRepository,
+            LayeredRegistryAccess<RegistryLayer> registries,
+            WorldData worldData
+    ) {
+        final long seed = worldData.worldGenOptions().seed();
+        final RegistryAccess registryAccess = registries.compositeAccess();
+        final Registry<LevelStem> dimensions = registryAccess.registryOrThrow(Registries.LEVEL_STEM);
+        LibWoverWorldGenerator.C.log.info(
+                "Initializing external biome sources from active dimensions registry ({} entries)",
+                dimensions.size()
+        );
+        for (var entry : dimensions.entrySet()) {
+            final ChunkGenerator generator = entry.getValue().generator();
+            final var loadedSource = generator.getBiomeSource();
+            final var sourceForCompatibility = LithostitchedBiomeSourceCompat.unwrap(loadedSource);
+            if (sourceForCompatibility instanceof WoverBiomeSource source
+                    && source.initializeExternalBiomeSource(
+                    seed,
+                    registryAccess,
+                    entry.getValue().type(),
+                    entry.getKey(),
+                    generator
+            )) {
+                if (LithostitchedBiomeSourceCompat.refreshPossibleBiomes(loadedSource, source.possibleBiomes())) {
+                    LibWoverWorldGenerator.C.log.info(
+                            "Refreshed Lithostitched biome cache for {} with {} possible biomes",
+                            entry.getKey().location(),
+                            loadedSource.possibleBiomes().size()
+                    );
+                }
+                if (generator instanceof RebuildableFeaturesPerStep<?> rebuildable) {
+                    rebuildable.wover_rebuildFeaturesPerStep();
+                }
+            }
+        }
     }
 
     private static void printInfo(

@@ -6,6 +6,10 @@ import org.betterx.wover.biome.impl.data.BiomeDataRegistryImpl;
 import org.betterx.wover.core.api.ModCore;
 import org.betterx.wover.entrypoint.LibWoverWorldGenerator;
 import org.betterx.wover.generator.api.biomesource.WoverBiomeSource;
+import org.betterx.wover.generator.impl.compat.BlueprintBiomeSourceCompat;
+import org.betterx.wover.generator.impl.compat.CopiedEndBiomeRegistryCompat;
+import org.betterx.wover.generator.impl.compat.TerraBlenderEndBiomeCompat;
+import org.betterx.wover.generator.impl.compat.VanillaNetherBiomeCompat;
 import org.betterx.wover.state.api.WorldState;
 import org.betterx.wover.util.Pair;
 
@@ -16,6 +20,7 @@ import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.biome.Biome;
 
 import java.util.*;
@@ -65,7 +70,7 @@ public class WoverBiomeSourceImpl {
         }
 
         final Set<Holder<Biome>> allBiomes = new HashSet<>();
-        final Set<ResourceKey<Biome>> addedBiomes = new HashSet<>();
+        final Set<BiomePlacement> addedBiomePlacements = new HashSet<>();
         final Registry<Biome> biomes = access.registryOrThrow(Registries.BIOME);
         final Registry<BiomeData> biomeData = access.registry(BiomeDataRegistry.BIOME_DATA_REGISTRY).orElse(null);
 
@@ -78,24 +83,40 @@ public class WoverBiomeSourceImpl {
                 tag.stream()
                    .filter(holder -> holder.unwrapKey().isPresent())
                    .map(holder -> new Pair<>(holder, holder.unwrapKey().get()))
-                   .filter(pair -> !addedBiomes.contains(pair.second))
+                   .filter(pair -> !addedBiomePlacements.contains(new BiomePlacement(mapper.tag(), pair.second)))
                    .filter(pair -> !excluded.contains(pair.second.location()))
                    .sorted(Comparator.comparing(pair -> pair.second.location().toString()))
                    .forEach(pair -> {
                        final boolean isPossible;
-                       final BiomeData data = BiomeDataRegistryImpl.getFromRegistryOrTemp(
+                       BiomeData data = BiomeDataRegistryImpl.getFromRegistryOrTemp(
                                biomeData,
                                pair.second
                        );
 
-                       if (data != null && data.isPickable()) {
-                           isPossible = pickerAdder.add(data, mapper.tag(), mapper.picker());
+                       if (data != null && !data.isTemp()) {
+                           // Parent and edge biomes are selected by an existing picker rather than registered as
+                           // independent candidates. They must still remain in possibleBiomes for /locate, feature
+                           // sorting, and surface-rule injection.
+                           isPossible = data.isPickable()
+                                   ? pickerAdder.add(data, mapper.tag(), mapper.picker())
+                                   : true;
                        } else {
-                           isPossible = true;
+                           data = BlueprintBiomeSourceCompat.getImportedBiomeData(pair.second);
+                           if (data == null || data.isTemp()) {
+                               data = TerraBlenderEndBiomeCompat.getImportedBiomeData(pair.second);
+                           }
+                           if (data == null || data.isTemp()) {
+                               data = CopiedEndBiomeRegistryCompat.getImportedBiomeData(pair.second);
+                           }
+                           if (data == null || data.isTemp()) {
+                               data = VanillaNetherBiomeCompat.getImportedBiomeData(pair.second);
+                           }
+                           isPossible = data != null && !data.isTemp() && data.isPickable()
+                                   && pickerAdder.add(data, mapper.tag(), mapper.picker());
                        }
 
                        if (isPossible) {
-                           addedBiomes.add(pair.second);
+                           addedBiomePlacements.add(new BiomePlacement(mapper.tag(), pair.second));
                            allBiomes.add(pair.first);
                        }
                    });
@@ -103,5 +124,8 @@ public class WoverBiomeSourceImpl {
         }
 
         return allBiomes;
+    }
+
+    private record BiomePlacement(TagKey<Biome> tag, ResourceKey<Biome> biome) {
     }
 }

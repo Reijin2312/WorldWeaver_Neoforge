@@ -5,10 +5,16 @@ import org.betterx.wover.common.generator.api.biomesource.BiomeSourceWithConfig;
 import org.betterx.wover.common.generator.api.biomesource.MergeableBiomeSource;
 import org.betterx.wover.common.generator.api.biomesource.ReloadableBiomeSource;
 import org.betterx.wover.common.generator.api.chunkgenerator.EnforceableChunkGenerator;
+import org.betterx.wover.common.generator.api.chunkgenerator.RebuildableFeaturesPerStep;
 import org.betterx.wover.core.api.IntegrationCore;
 import org.betterx.wover.entrypoint.LibWoverWorldGenerator;
+import org.betterx.wover.generator.api.biomesource.WoverBiomeSource;
 import org.betterx.wover.generator.impl.biomesource.end.TheEndBiomesHelper;
 import org.betterx.wover.generator.impl.biomesource.nether.NetherBiomesHelper;
+import org.betterx.wover.generator.impl.compat.BlueprintBiomeSourceCompat;
+import org.betterx.wover.generator.impl.compat.CopiedEndBiomeRegistryCompat;
+import org.betterx.wover.generator.impl.compat.TerraBlenderEndBiomeCompat;
+import org.betterx.wover.generator.impl.compat.VanillaNetherBiomeCompat;
 import org.betterx.wover.tag.api.predefined.CommonBiomeTags;
 
 import net.minecraft.core.Holder;
@@ -19,8 +25,13 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.BiomeTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.MultiNoiseBiomeSource;
+import net.minecraft.world.level.biome.MultiNoiseBiomeSourceParameterList;
+import net.minecraft.world.level.biome.MultiNoiseBiomeSourceParameterLists;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.dimension.LevelStem;
+import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
+import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 import net.minecraft.world.level.levelgen.WorldDimensions;
 
 import com.google.common.base.Stopwatch;
@@ -53,13 +64,25 @@ class BiomeRepairHelper {
 
         // ensure that biomes registered through the loader helpers have the proper tags
         registerAllBiomesFromRegistry(biomes);
+        // The external fallback does not return vanilla output over WoVer's own picker. Add the
+        // vanilla Nether candidates explicitly, as BCLib 1.20 did for its Nether biome source.
+        registerVanillaNetherBiomes(biomes);
+        // TerraBlender keeps End biomes in a separate weighted registry rather than a dimension biome source.
+        // Import its categories before the End picker is rebuilt so those biomes are not dropped.
         registerAllBiomesFromTerraBlender(biomes);
+        registerCopiedEndBiomeRegistries(biomes);
+        BlueprintBiomeSourceCompat.importActiveEndOverlays(registryAccess, biomes);
         var originalSet =  dimensionRegistry.entrySet();
         for (Map.Entry<ResourceKey<LevelStem>, LevelStem> entry :originalSet) {
             boolean didRepair = false;
             ResourceKey<LevelStem> key = entry.getKey();
             LevelStem loadedStem = entry.getValue();
             final ChunkGenerator loadedChunkGenerator = loadedStem.generator();
+            final ChunkGenerator externalChunkGenerator = getExternalBaseGenerator(
+                    registryAccess,
+                    key,
+                    loadedChunkGenerator
+            );
 
             final ChunkGenerator referenceGenerator = configuredDimensions.get(key);
 
@@ -90,7 +113,14 @@ class BiomeRepairHelper {
                 }
             }
 
-            mergeWithVanillaDimensionSource(registryAccess, key, loadedChunkGenerator);
+            LevelStem activeStem = dimensionRegistry.get(key);
+            if (activeStem != null) {
+                if (LevelStem.END.equals(key)
+                        && activeStem.generator() instanceof WoverChunkGenerator woverGenerator) {
+                    woverGenerator.wover_removeBlueprintEndWrapper();
+                }
+                attachExternalBiomeSource(key, activeStem.generator(), externalChunkGenerator);
+            }
 
             if (!didRepair) {
                 if (loadedStem.generator().getBiomeSource() instanceof ReloadableBiomeSource reload) {
@@ -103,6 +133,76 @@ class BiomeRepairHelper {
         copyWorldPresetReference(dimensionRegistry, configuredDimensions);
 
         return dimensionRegistry;
+    }
+
+    private ChunkGenerator getExternalBaseGenerator(
+            RegistryAccess registryAccess,
+            ResourceKey<LevelStem> dimensionKey,
+            ChunkGenerator loadedGenerator
+    ) {
+        if (!(loadedGenerator.getBiomeSource() instanceof WoverBiomeSource)) {
+            LibWoverWorldGenerator.C.log.info(
+                    "Using loaded biome source as external fallback for {}: {}",
+                    dimensionKey.location(),
+                    loadedGenerator.getBiomeSource().getClass().getName()
+            );
+            return loadedGenerator;
+        }
+
+        if (!LevelStem.NETHER.equals(dimensionKey)) {
+            return null;
+        }
+
+        Holder<NoiseGeneratorSettings> settings = registryAccess
+                .registryOrThrow(Registries.NOISE_SETTINGS)
+                .getHolderOrThrow(NoiseGeneratorSettings.NETHER);
+        Holder<MultiNoiseBiomeSourceParameterList> parameters = registryAccess
+                .registryOrThrow(Registries.MULTI_NOISE_BIOME_SOURCE_PARAMETER_LIST)
+                .getHolderOrThrow(MultiNoiseBiomeSourceParameterLists.NETHER);
+        ChunkGenerator externalGenerator = new NoiseBasedChunkGenerator(
+                MultiNoiseBiomeSource.createFromPreset(parameters),
+                settings
+        );
+        LibWoverWorldGenerator.C.log.info(
+                "Created vanilla Nether biome fallback for {}: source={}",
+                dimensionKey.location(),
+                externalGenerator.getBiomeSource().getClass().getName()
+        );
+        return externalGenerator;
+    }
+
+    private void attachExternalBiomeSource(
+            ResourceKey<LevelStem> dimensionKey,
+            ChunkGenerator targetGenerator,
+            ChunkGenerator externalGenerator
+    ) {
+        if (externalGenerator == null || targetGenerator == externalGenerator) {
+            return;
+        }
+
+        if (!(targetGenerator.getBiomeSource() instanceof MergeableBiomeSource<?> mergeableSource)) {
+            return;
+        }
+
+        try {
+            mergeableSource.mergeWithBiomeSource(externalGenerator.getBiomeSource());
+            if (targetGenerator instanceof RebuildableFeaturesPerStep<?> rebuildable) {
+                rebuildable.wover_rebuildFeaturesPerStep();
+            }
+            LibWoverWorldGenerator.C.log.info(
+                    "Attached external biome fallback for {}: target={}, fallback={}, fallbackPossibleBiomes={}",
+                    dimensionKey.location(),
+                    targetGenerator.getBiomeSource().getClass().getName(),
+                    externalGenerator.getBiomeSource().getClass().getName(),
+                    externalGenerator.getBiomeSource().possibleBiomes().size()
+            );
+        } catch (RuntimeException e) {
+            LibWoverWorldGenerator.C.log.warn(
+                    "Unable to attach external biome fallback for {}",
+                    dimensionKey.location(),
+                    e
+            );
+        }
     }
 
     private static void copyWorldPresetReference(
@@ -162,6 +262,14 @@ class BiomeRepairHelper {
 
     }
 
+    private void registerVanillaNetherBiomes(Registry<Biome> biomes) {
+        final Stopwatch sw = Stopwatch.createStarted();
+        final int biomesAdded = VanillaNetherBiomeCompat.importBiomes(biomes);
+        if (biomesAdded > 0) {
+            LibWoverWorldGenerator.C.log.info("Registered {} vanilla Nether biome candidates in {}", biomesAdded, sw);
+        }
+    }
+
     private void registerAllBiomesFromTerraBlender(Registry<Biome> biomes) {
         if (!IntegrationCore.RUNS_TERRABLENDER) {
             return;
@@ -173,7 +281,7 @@ class BiomeRepairHelper {
 
         try {
             biomesAdded += addTerraBlenderRegionBiomes(biomes, biomeTagWorker, "NETHER", BiomeTags.IS_NETHER);
-            biomesAdded += addTerraBlenderEndBiomes(biomes, biomeTagWorker);
+            biomesAdded += TerraBlenderEndBiomeCompat.importRegisteredBiomes(biomes);
         } catch (Throwable e) {
             LibWoverWorldGenerator.C.log.warn("Failed reading TerraBlender regions for compatibility", e);
         }
@@ -181,6 +289,14 @@ class BiomeRepairHelper {
         biomeTagWorker.finished();
         if (biomesAdded > 0) {
             LibWoverWorldGenerator.C.log.info("Added {} TerraBlender biomes in {}", biomesAdded, sw);
+        }
+    }
+
+    private void registerCopiedEndBiomeRegistries(Registry<Biome> biomes) {
+        final Stopwatch sw = Stopwatch.createStarted();
+        final int biomesAdded = CopiedEndBiomeRegistryCompat.importRegisteredBiomes(biomes);
+        if (biomesAdded > 0) {
+            LibWoverWorldGenerator.C.log.info("Imported {} copied End Biomes API biome(s) in {}", biomesAdded, sw);
         }
     }
 
@@ -234,90 +350,6 @@ class BiomeRepairHelper {
         return added;
     }
 
-    private int addTerraBlenderEndBiomes(
-            Registry<Biome> biomes,
-            BiomeTagModificationWorker biomeTagWorker
-    ) throws ReflectiveOperationException {
-        int added = 0;
-        final Class<?> endRegistryClass = Class.forName("terrablender.api.EndBiomeRegistry");
-        final Set<ResourceKey<Biome>> claimedBiomes = new HashSet<>();
-
-        // Wover picker population deduplicates biomes globally across tags. If a TerraBlender end biome is registered in
-        // multiple end categories (e.g. highlands + midlands + edge), we must pick one category deterministically or it
-        // may end up in a transitional bucket (edge/barrens) and appear "missing" in normal land placement.
-        added += addTerraBlenderEndBiomeSet(
-                endRegistryClass,
-                claimedBiomes,
-                "getIslandBiomes",
-                biomes,
-                biomeTagWorker,
-                CommonBiomeTags.IS_SMALL_END_ISLAND
-        );
-        added += addTerraBlenderEndBiomeSet(
-                endRegistryClass,
-                claimedBiomes,
-                "getHighlandsBiomes",
-                biomes,
-                biomeTagWorker,
-                CommonBiomeTags.IS_END_HIGHLAND
-        );
-        added += addTerraBlenderEndBiomeSet(
-                endRegistryClass,
-                claimedBiomes,
-                "getMidlandsBiomes",
-                biomes,
-                biomeTagWorker,
-                CommonBiomeTags.IS_END_MIDLAND
-        );
-        added += addTerraBlenderEndBiomeSet(
-                endRegistryClass,
-                claimedBiomes,
-                "getEdgeBiomes",
-                biomes,
-                biomeTagWorker,
-                CommonBiomeTags.IS_END_BARRENS
-        );
-
-        return added;
-    }
-
-    private int addTerraBlenderEndBiomeSet(
-            Class<?> endRegistryClass,
-            Set<ResourceKey<Biome>> claimedBiomes,
-            String getter,
-            Registry<Biome> biomes,
-            BiomeTagModificationWorker biomeTagWorker,
-            TagKey<Biome> tag
-    ) throws ReflectiveOperationException {
-        final Method listGetter = endRegistryClass.getMethod(getter);
-        final Object value = listGetter.invoke(null);
-        if (!(value instanceof Iterable<?> wrappers)) {
-            return 0;
-        }
-
-        int added = 0;
-        for (Object wrapper : wrappers) {
-            if (wrapper == null) continue;
-            final Object keyObject = wrapper.getClass().getMethod("data").invoke(wrapper);
-            if (keyObject instanceof ResourceKey<?> key) {
-                @SuppressWarnings("unchecked")
-                final ResourceKey<Biome> biomeKey = (ResourceKey<Biome>) key;
-                if (biomes.containsKey(biomeKey)) {
-                    if (!claimedBiomes.add(biomeKey)) {
-                        continue;
-                    }
-                    final Holder.Reference<Biome> holder = biomes.getHolderOrThrow(biomeKey);
-                    if (!holder.is(tag)) {
-                        biomeTagWorker.addBiomeToTag(tag, biomes, biomeKey, holder);
-                        added++;
-                    }
-                }
-            }
-        }
-
-        return added;
-    }
-
     private void registerAllBiomesFromVanillaDimension(
             RegistryAccess access,
             Registry<Biome> biomes,
@@ -355,31 +387,4 @@ class BiomeRepairHelper {
         }
     }
 
-    private void mergeWithVanillaDimensionSource(
-            RegistryAccess access,
-            ResourceKey<LevelStem> key,
-            ChunkGenerator loadedGenerator
-    ) {
-        if (!(loadedGenerator.getBiomeSource() instanceof MergeableBiomeSource<?> mergeableSource)) {
-            return;
-        }
-
-        if (vanillaDimensions == null) {
-            vanillaDimensions = DimensionsWrapper.getDimensionsMap(
-                    access,
-                    net.minecraft.world.level.levelgen.presets.WorldPresets.NORMAL
-            );
-        }
-
-        final ChunkGenerator vanillaGenerator = vanillaDimensions.get(key);
-        if (vanillaGenerator == null || vanillaGenerator.getBiomeSource() == null) {
-            return;
-        }
-
-        try {
-            mergeableSource.mergeWithBiomeSource(vanillaGenerator.getBiomeSource());
-        } catch (RuntimeException e) {
-            LibWoverWorldGenerator.C.log.warn("Unable to merge fallback biome source for {}", key.location(), e);
-        }
-    }
 }

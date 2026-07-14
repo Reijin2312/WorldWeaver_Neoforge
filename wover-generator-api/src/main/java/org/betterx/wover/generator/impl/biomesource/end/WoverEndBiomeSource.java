@@ -223,7 +223,11 @@ public class WoverEndBiomeSource extends WoverBiomeSource implements
             if (!ModCore.isDatagen() && WorldState.allStageRegistryAccess() != null)
                 LibWoverWorldGenerator.C.log.verbose("No Barrens Biomes found. Disabling by using land Biomes");
             endBarrensBiomePicker = endLandBiomePicker;
-            endVoidBiomePicker = endLandBiomePicker;
+            // Void biomes are selected independently from barrens. Keeping a populated void picker is required for
+            // Blueprint overlays such as Unusual End's warped reef, even when no barrens biome is registered.
+            if (endVoidBiomePicker.isEmpty()) {
+                endVoidBiomePicker = endLandBiomePicker;
+            }
         }
         if (endCenterBiomePicker.isEmpty()) {
             if (!ModCore.isDatagen() && WorldState.allStageRegistryAccess() != null)

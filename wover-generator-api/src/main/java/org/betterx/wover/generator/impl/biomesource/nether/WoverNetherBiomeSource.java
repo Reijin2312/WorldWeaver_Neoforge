@@ -9,6 +9,7 @@ import org.betterx.wover.generator.api.client.biomesource.client.BiomeSourceWith
 import org.betterx.wover.generator.api.map.BiomeMap;
 import org.betterx.wover.generator.api.map.MapBuilderFunction;
 import org.betterx.wover.generator.impl.client.NetherConfigPage;
+import org.betterx.wover.generator.impl.compat.VanillaNetherBiomeCompat;
 import org.betterx.wover.generator.impl.map.MapStack;
 
 import com.mojang.serialization.Codec;
@@ -163,6 +164,12 @@ public class WoverNetherBiomeSource extends WoverBiomeSource implements
             biomeMap.clearCache();
         }
         WoverBiomePicker.PickableBiome bb = biomeMap.getBiome(biomeX << 2, biomeY << 2, biomeZ << 2);
+        // MosaicBiomeSource may offer an external biome at every position. Once the picker selected
+        // a vanilla Nether biome, preserving it is required for a stable vanilla distribution and
+        // for /locate to agree with the biome actually generated at that position.
+        if (VanillaNetherBiomeCompat.isVanillaNetherBiome(bb.biome)) {
+            return bb.biome;
+        }
         return applyFallbackBiomeSource(bb.biome, biomeX, biomeY, biomeZ, var4);
     }
 

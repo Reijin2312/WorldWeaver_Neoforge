@@ -9,11 +9,13 @@ import org.betterx.wover.common.generator.api.biomesource.ReloadableBiomeSource;
 import org.betterx.wover.common.generator.api.chunkgenerator.EnforceableChunkGenerator;
 import org.betterx.wover.common.generator.api.chunkgenerator.RebuildableFeaturesPerStep;
 import org.betterx.wover.common.generator.api.chunkgenerator.RestorableBiomeSource;
+import org.betterx.wover.common.generator.impl.compat.LithostitchedBiomeSourceCompat;
 import org.betterx.wover.common.surface.api.InjectableSurfaceRules;
 import org.betterx.wover.core.api.IntegrationCore;
 import org.betterx.wover.entrypoint.LibWoverWorldGenerator;
 import org.betterx.wover.generator.impl.biomesource.end.WoverEndBiomeSource;
 import org.betterx.wover.generator.impl.biomesource.nether.WoverNetherBiomeSource;
+import org.betterx.wover.generator.impl.compat.BlueprintBiomeSourceCompat;
 import org.betterx.wover.surface.impl.SurfaceRuleUtil;
 
 import com.mojang.serialization.MapCodec;
@@ -104,6 +106,15 @@ public class WoverChunkGenerator extends NoiseBasedChunkGenerator implements
      */
     @Override
     public void restoreInitialBiomeSource(ResourceKey<LevelStem> dimensionKey) {
+        if (BlueprintBiomeSourceCompat.wraps(getBiomeSource(), initialBiomeSource)) {
+            if (LevelStem.END.equals(dimensionKey) && wover_removeBlueprintEndWrapper()) {
+                return;
+            } else {
+                ChunkGeneratorHelper.rebuildFeaturesPerStep(this, getBiomeSource());
+            }
+            return;
+        }
+
         if (initialBiomeSource != getBiomeSource()) {
             if (this instanceof ChunkGeneratorAccessor acc) {
                 if (initialBiomeSource instanceof MergeableBiomeSource<?> bs) {
@@ -198,6 +209,10 @@ public class WoverChunkGenerator extends NoiseBasedChunkGenerator implements
 
     @Override
     public void wover_injectSurfaceRules(Registry<LevelStem> dimensionRegistry, ResourceKey<LevelStem> dimensionKey) {
+        if (LevelStem.END.equals(dimensionKey)) {
+            wover_removeBlueprintEndWrapper();
+        }
+
         if (IntegrationCore.RUNS_TERRABLENDER) {
             applyTerraBlenderRuleCategory(generatorSettings(), dimensionKey, this.getBiomeSource());
         }
@@ -255,6 +270,32 @@ public class WoverChunkGenerator extends NoiseBasedChunkGenerator implements
                     e
             );
         }
+    }
+
+    /**
+     * Blueprint applies its End overlay after the configured generator was created. Once every active overlay has
+     * been imported into the Wover picker, retaining that wrapper makes the surface-rule context observe a different
+     * source than the one that owns BetterEnd's biome rules.
+     */
+    boolean wover_removeBlueprintEndWrapper() {
+        final BiomeSource currentSource = getBiomeSource();
+        final BiomeSource unwrappedSource = LithostitchedBiomeSourceCompat.unwrap(currentSource);
+        if (!BlueprintBiomeSourceCompat.canReplaceEndWrapper()
+                || currentSource == unwrappedSource
+                || !(unwrappedSource instanceof WoverEndBiomeSource)
+                || !(this instanceof ChunkGeneratorAccessor acc)) {
+            return false;
+        }
+
+        acc.wover_setBiomeSource(unwrappedSource);
+        if (unwrappedSource instanceof ReloadableBiomeSource reloadable) {
+            reloadable.reloadBiomes();
+        }
+        ChunkGeneratorHelper.rebuildFeaturesPerStep(this, unwrappedSource);
+        LibWoverWorldGenerator.C.log.info(
+                "Replaced Blueprint End wrapper after importing all active biome overlays"
+        );
+        return true;
     }
 }
 
