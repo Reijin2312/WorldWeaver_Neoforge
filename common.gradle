@@ -381,7 +381,9 @@ task javadocJar(type: Jar, dependsOn: [javadoc, copyHighlightJs]) {
 }
 
 artifacts {
-    dev remapJar
+    // Local Loom consumers run in the named namespace. Publishing remapJar here makes runClient load the
+    // production/intermediary access widener after a build; the regular jar task is the named dev artifact.
+    dev jar
     localDev jar
     archives sourcesJar
     archives javadocJar

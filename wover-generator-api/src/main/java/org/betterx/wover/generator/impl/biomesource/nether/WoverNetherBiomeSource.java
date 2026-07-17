@@ -164,7 +164,9 @@ public class WoverNetherBiomeSource extends WoverBiomeSource implements
             biomeMap.clearCache();
         }
         WoverBiomePicker.PickableBiome bb = biomeMap.getBiome(biomeX << 2, biomeY << 2, biomeZ << 2);
-        if (VanillaNetherBiomeCompat.isVanillaNetherBiome(bb.biome)) {
+        // Keep Wover/BetterNether biomes authoritative. Compatibility biome
+        // sources may replace vanilla Nether slots, not consume Wover's share.
+        if (!VanillaNetherBiomeCompat.isVanillaNetherBiome(bb.biome)) {
             return bb.biome;
         }
         return applyFallbackBiomeSource(bb.biome, biomeX, biomeY, biomeZ, var4);

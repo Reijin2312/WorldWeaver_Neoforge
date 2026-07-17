@@ -29,6 +29,13 @@ public class WorldPresetInfoProvider extends WoverRegistryContentProvider<WorldP
                               .register(WorldPresets.WOVER_WORLD);
 
         WorldPresetInfoBuilder.start(context)
+                              .order(1600)
+                              .overworldOverride(net.minecraft.world.level.levelgen.presets.WorldPresets.FLAT)
+                              .netherOverride(WorldPresets.WOVER_WORLD)
+                              .endOverride(WorldPresets.WOVER_WORLD)
+                              .register(WorldPresets.WOVER_WORLD_SUPERFLAT);
+
+        WorldPresetInfoBuilder.start(context)
                               .order(2500)
                               .overworldOverride(net.minecraft.world.level.levelgen.presets.WorldPresets.AMPLIFIED)
                               .endOverride(WorldPresets.WOVER_WORLD)

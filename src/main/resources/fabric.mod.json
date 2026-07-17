@@ -1,11 +1,12 @@
 {
     "schemaVersion": 1,
     "id": "wover",
-    "version": "21.0.13",
+    "version": "21.0.14",
     "name": "WorldWeaver",
     "description": "Unleash your world-building potential with WorldWeaver, a Minecraft utility mod for Fabric, simplifying tasks and enhancing the possibilities of data-driven world generation.",
     "authors": [
-        "Quiqueck"
+        "Quiqueck",
+        "Raijin"
     ],
     "contact": {
         "homepage": "https://github.com/quiqueck/WorldWeaver",

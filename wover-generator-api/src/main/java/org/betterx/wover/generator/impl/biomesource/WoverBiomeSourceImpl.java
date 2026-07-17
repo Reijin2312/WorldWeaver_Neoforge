@@ -7,6 +7,7 @@ import org.betterx.wover.core.api.ModCore;
 import org.betterx.wover.entrypoint.LibWoverWorldGenerator;
 import org.betterx.wover.generator.api.biomesource.WoverBiomeSource;
 import org.betterx.wover.generator.impl.compat.BlueprintBiomeSourceCompat;
+import org.betterx.wover.generator.impl.compat.CopiedEndBiomeRegistryCompat;
 import org.betterx.wover.generator.impl.compat.TerraBlenderEndBiomeCompat;
 import org.betterx.wover.generator.impl.compat.VanillaNetherBiomeCompat;
 import org.betterx.wover.state.api.WorldState;
@@ -97,6 +98,7 @@ public class WoverBiomeSourceImpl {
                        } else if (data == null || data.isTemp()) {
                            data = BlueprintBiomeSourceCompat.getImportedBiomeData(pair.second);
                            if (data == null || data.isTemp()) data = TerraBlenderEndBiomeCompat.getImportedBiomeData(pair.second);
+                           if (data == null || data.isTemp()) data = CopiedEndBiomeRegistryCompat.getImportedBiomeData(pair.second);
                            if (data == null || data.isTemp()) data = VanillaNetherBiomeCompat.getImportedBiomeData(pair.second);
                            isPossible = data != null && !data.isTemp() && data.isPickable()
                                    && pickerAdder.add(data, mapper.tag(), mapper.picker());

@@ -323,6 +323,15 @@ public class BiomeData {
     }
 
     /**
+     * Used to determine whether a biome is enabled for world generation.
+     *
+     * @return {@code true} if the biome is enabled, {@code false} otherwise.
+     */
+    public boolean isEnabled() {
+        return true;
+    }
+
+    /**
      * Used to determine the chance of a Biome being picked. By default this method will return @{code 1.0f}.
      *
      * @return the chance of the Biome being picked.

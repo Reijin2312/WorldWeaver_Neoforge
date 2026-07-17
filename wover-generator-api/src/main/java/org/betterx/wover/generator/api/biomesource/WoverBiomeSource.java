@@ -277,9 +277,23 @@ public abstract class WoverBiomeSource extends BiomeSource implements
         initialized |= TerraBlenderBiomeSourceCompat.initialize(
                 source, registryAccess, dimensionType, dimensionKey, settingsOwner, seed
         );
-        externalPossibleBiomes = Set.copyOf(source.possibleBiomes());
+        final HashSet<Holder<Biome>> externalBiomes = new HashSet<>(source.possibleBiomes());
+        final Set<Holder<Biome>> terraBlenderBiomes = TerraBlenderBiomeSourceCompat.registeredBiomes(
+                registryAccess,
+                dimensionKey
+        );
+        externalBiomes.addAll(terraBlenderBiomes);
+        externalPossibleBiomes = Set.copyOf(externalBiomes);
         refreshDisabledExternalBiomeKeys();
         updateCombinedPossibleBiomes();
+        LibWoverWorldGenerator.C.log.info(
+                "External fallback for {}: source={}, initialized={}, possibleBiomes={}, terraBlenderRegionBiomes={}",
+                dimensionKey.location(),
+                source.getClass().getName(),
+                initialized,
+                externalPossibleBiomes.size(),
+                terraBlenderBiomes.size()
+        );
         return initialized;
     }
 

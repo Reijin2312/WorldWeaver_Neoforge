@@ -11,8 +11,8 @@ import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.util.random.WeightedEntry;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -57,11 +57,13 @@ public final class TerraBlenderEndBiomeCompat {
         if (!(value instanceof Iterable<?> entries)) return;
         List<BiomeEntry> importedEntries = new ArrayList<>();
         for (Object entry : entries) {
-            if (entry == null) continue;
-            Object data = entry.getClass().getMethod("data").invoke(entry);
+            if (!(entry instanceof WeightedEntry.Wrapper<?> wrapper)) continue;
+            Object data = wrapper.data();
             if (!(data instanceof ResourceKey<?> key)) continue;
             ResourceKey<Biome> biomeKey = (ResourceKey<Biome>) key;
-            if (biomes.containsKey(biomeKey)) importedEntries.add(new BiomeEntry(biomeKey, weightOf(entry)));
+            if (biomes.containsKey(biomeKey)) {
+                importedEntries.add(new BiomeEntry(biomeKey, weightOf(wrapper)));
+            }
         }
         Map<String, Float> normalizationFactors = normalizationFactors(importedEntries);
         for (BiomeEntry entry : importedEntries) {
@@ -86,14 +88,9 @@ public final class TerraBlenderEndBiomeCompat {
         return factors;
     }
 
-    private static float weightOf(Object entry) {
-        try {
-            Object weight = entry.getClass().getMethod("getWeight").invoke(entry);
-            Object value = weight.getClass().getMethod("asInt").invoke(weight);
-            if (value instanceof Integer integer && integer > 0) return integer;
-        } catch (ReflectiveOperationException ignored) {
-        }
-        return 1.0F;
+    private static float weightOf(WeightedEntry.Wrapper<?> entry) {
+        int weight = entry.getWeight().asInt();
+        return weight > 0 ? weight : 1.0F;
     }
 
     private record BiomeEntry(ResourceKey<Biome> biome, float weight) {

@@ -13,6 +13,7 @@ public class WorldPresets {
     public final static ResourceKey<WorldPreset> WOVER_WORLD = PresetRegistryImpl.WOVER_WORLD;
     public final static ResourceKey<WorldPreset> WOVER_WORLD_LARGE = PresetRegistryImpl.WOVER_WORLD_LARGE;
     public final static ResourceKey<WorldPreset> WOVER_WORLD_AMPLIFIED = PresetRegistryImpl.WOVER_WORLD_AMPLIFIED;
+    public final static ResourceKey<WorldPreset> WOVER_WORLD_SUPERFLAT = PresetRegistryImpl.WOVER_WORLD_SUPERFLAT;
 
 
     public static LevelStem makeWoverNetherStem(

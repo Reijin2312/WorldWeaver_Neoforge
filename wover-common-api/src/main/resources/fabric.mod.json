@@ -15,6 +15,9 @@
     "license": "MIT",
     "icon": "assets/wover-common/icon.png",
     "environment": "*",
+    "mixins": [
+        "wover.common.mixins.common.json"
+    ],
     "depends": {
         "fabricloader": ">=0.15.3",
         "minecraft": [

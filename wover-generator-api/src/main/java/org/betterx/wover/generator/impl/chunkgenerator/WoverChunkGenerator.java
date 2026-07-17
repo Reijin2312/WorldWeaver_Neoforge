@@ -255,9 +255,14 @@ public class WoverChunkGenerator extends NoiseBasedChunkGenerator implements
         }
     }
 
+    /**
+     * Blueprint applies its End overlay after the configured generator was created. Once every active overlay has
+     * been imported into the Wover picker, retaining that wrapper makes the surface-rule context observe a different
+     * source than the one that owns BetterEnd's biome rules.
+     */
     boolean wover_removeBlueprintEndWrapper() {
-        BiomeSource currentSource = getBiomeSource();
-        BiomeSource unwrappedSource = LithostitchedBiomeSourceCompat.unwrap(currentSource);
+        final BiomeSource currentSource = getBiomeSource();
+        final BiomeSource unwrappedSource = LithostitchedBiomeSourceCompat.unwrap(currentSource);
         if (!BlueprintBiomeSourceCompat.canReplaceEndWrapper()
                 || currentSource == unwrappedSource
                 || !(unwrappedSource instanceof WoverEndBiomeSource)
@@ -269,6 +274,9 @@ public class WoverChunkGenerator extends NoiseBasedChunkGenerator implements
             reloadable.reloadBiomes();
         }
         ChunkGeneratorHelper.rebuildFeaturesPerStep(this, unwrappedSource);
+        LibWoverWorldGenerator.C.log.info(
+                "Replaced Blueprint End wrapper after importing all active biome overlays"
+        );
         return true;
     }
 }

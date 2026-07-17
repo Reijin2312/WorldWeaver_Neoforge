@@ -19,6 +19,7 @@ import net.minecraft.world.item.*;
 import net.minecraft.world.level.block.DispenserBlock;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -27,7 +28,7 @@ import java.util.stream.Stream;
 public class ItemRegistry {
     private static final Map<ModCore, ItemRegistry> REGISTRIES = new HashMap<>();
     public final ModCore C;
-    private final Map<ResourceLocation, Item> items = new HashMap<>();
+    private final Map<ResourceLocation, Item> items = new LinkedHashMap<>();
     private Map<Item, TagKey<Item>[]> datagenTags;
 
     private ItemRegistry(ModCore modeCore) {
