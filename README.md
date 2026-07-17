@@ -1,3 +1,5 @@
+![](./public/img/header.png)
+
 <div align="center">
 
 # WorldWeaver: New Dawn
