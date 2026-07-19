@@ -14,9 +14,8 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
 
-import com.google.common.collect.Maps;
-
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class FeatureTemplateImpl extends StructureNBT implements TemplateFeatureConfig.FeatureTemplate {
     public static final Codec<TemplateFeatureConfig.FeatureTemplate> CODEC =
@@ -40,7 +39,7 @@ public class FeatureTemplateImpl extends StructureNBT implements TemplateFeature
         this.offsetY = offsetY;
     }
 
-    private static final Map<String, FeatureTemplateImpl> READER_CACHE = Maps.newHashMap();
+    private static final Map<String, FeatureTemplateImpl> READER_CACHE = new ConcurrentHashMap<>();
 
     public static TemplateFeatureConfig.FeatureTemplate createTemplate(
             Identifier location
@@ -116,3 +115,5 @@ public class FeatureTemplateImpl extends StructureNBT implements TemplateFeature
         return location;
     }
 }
+
+

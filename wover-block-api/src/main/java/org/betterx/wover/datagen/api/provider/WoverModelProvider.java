@@ -16,7 +16,7 @@ import net.minecraft.client.data.models.model.DelegatedModel;
 import net.minecraft.client.data.models.model.ItemModelUtils;
 import net.minecraft.client.data.models.model.ModelInstance;
 import net.minecraft.client.data.models.model.ModelLocationUtils;
-import net.minecraft.client.renderer.block.model.BlockModelDefinition;
+import net.minecraft.client.renderer.block.dispatch.BlockStateModelDispatcher;
 import net.minecraft.client.renderer.item.ClientItem;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataProvider;
@@ -28,7 +28,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
+import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
 
 import com.google.common.collect.Maps;
 import com.google.gson.JsonElement;
@@ -161,7 +161,7 @@ public abstract class WoverModelProvider implements WoverDataProvider<DataProvid
 
     @Override
     public DataProvider getProvider(
-            FabricDataOutput output,
+            FabricPackOutput output,
             CompletableFuture<HolderLookup.Provider> registriesFuture
     ) {
         return new DataProvider() {
@@ -205,7 +205,6 @@ public abstract class WoverModelProvider implements WoverDataProvider<DataProvid
                     public void copy(Item target, Item source) {
                         copiedItemInfos.put(target, source);
                     }
-
                 };
 
                 WoverBlockModelGeneratorsAccess blockModelGenerators = new WoverBlockModelGeneratorsAccess(
@@ -223,7 +222,7 @@ public abstract class WoverModelProvider implements WoverDataProvider<DataProvid
                 return CompletableFuture.allOf(
                         DataProvider.saveAll(
                                 cache,
-                                generator -> BlockModelDefinition.CODEC.encodeStart(JsonOps.INSTANCE, generator.create()).getOrThrow(),
+                                generator -> BlockStateModelDispatcher.CODEC.encodeStart(JsonOps.INSTANCE, generator.create()).getOrThrow(),
                                 b -> blockStatePathProvider.json(
                                         b.builtInRegistryHolder().key().identifier()
                                 ),

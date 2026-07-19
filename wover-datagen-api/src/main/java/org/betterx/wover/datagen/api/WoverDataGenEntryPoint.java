@@ -13,7 +13,7 @@ import net.minecraft.resources.Identifier;
 
 import net.fabricmc.fabric.api.datagen.v1.DataGeneratorEntrypoint;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
+import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
 import net.fabricmc.fabric.api.resource.ResourcePackActivationType;
 
 import java.util.LinkedList;
@@ -216,7 +216,7 @@ public abstract class WoverDataGenEntryPoint implements DataGeneratorEntrypoint 
 
         //add a pack description
         pack.addProvider(
-                (FabricDataOutput packOutput) -> PackMetadataGenerator.forFeaturePack(
+                (FabricPackOutput packOutput) -> PackMetadataGenerator.forFeaturePack(
                         packOutput,
                         Component.translatable("pack." + location.getNamespace() + "." + location.getPath() + ".description")
                 )

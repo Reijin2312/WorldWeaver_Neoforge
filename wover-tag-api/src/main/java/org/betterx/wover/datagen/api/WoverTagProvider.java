@@ -10,8 +10,9 @@ import org.betterx.wover.tag.api.event.context.TagElementWrapper;
 import org.betterx.wover.tag.impl.TagManagerImpl;
 
 import net.minecraft.core.HolderLookup;
+import net.minecraft.data.tags.TagsProvider;
 import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.tags.TagBuilder;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
@@ -19,8 +20,8 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider;
+import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagsProvider;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -28,7 +29,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * A {@link FabricTagProvider} that writes tags to the data directory.
+ * A {@link TagsProvider} that writes tags to the data directory.
  * <p>
  * This class does interface with the Tag API. It allows you to
  * bootstrap Tags and serialize them to disk. Only tags that are
@@ -38,7 +39,7 @@ import org.jetbrains.annotations.Nullable;
  * @param <T> the taggable type
  * @param <P> the bootstrap context type
  */
-public abstract class WoverTagProvider<T, P extends TagBootstrapContext<T>> implements WoverDataProvider<FabricTagProvider<T>> {
+public abstract class WoverTagProvider<T, P extends TagBootstrapContext<T>> implements WoverDataProvider<FabricTagsProvider<T>> {
     /**
      * All allowed namespaces for this tag provider.
      * <p>
@@ -214,12 +215,30 @@ public abstract class WoverTagProvider<T, P extends TagBootstrapContext<T>> impl
         return false;
     }
 
+    private static void setReplace(TagBuilder builder, boolean replace) {
+        if (!replace) {
+            return;
+        }
+
+        try {
+            TagBuilder.class.getMethod("replace", boolean.class).invoke(builder, true);
+        } catch (NoSuchMethodException ignored) {
+            try {
+                TagBuilder.class.getMethod("replace").invoke(builder);
+            } catch (ReflectiveOperationException e) {
+                throw new IllegalStateException("Unable to mark tag builder as replacing existing tags", e);
+            }
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("Unable to mark tag builder as replacing existing tags", e);
+        }
+    }
+
     @Override
-    public FabricTagProvider<T> getProvider(
-            FabricDataOutput output,
+    public FabricTagsProvider<T> getProvider(
+            FabricPackOutput output,
             CompletableFuture<HolderLookup.Provider> registriesFuture
     ) {
-        return new FabricTagProvider<T>(output, tagRegistry.registryKey(), registriesFuture) {
+        return new FabricTagsProvider<T>(output, tagRegistry.registryKey(), registriesFuture) {
             @Override
             public String getName() {
                 return getTitle() + " (" + super.getName() + ")";
@@ -253,15 +272,16 @@ public abstract class WoverTagProvider<T, P extends TagBootstrapContext<T>> impl
                     if (!force && elements.isEmpty()) {
                         return;
                     }
-                    final var builder = builder(tag);
+                    final TagBuilder builder = getOrCreateRawBuilder(tag);
+                    setReplace(builder, replaceOriginalTags());
                     //write all elements that passed the above filtering...
                     for (var element : elements) {
                         if (element.tag()) {
-                            if (element.required()) builder.addTag(TagKey.create(tagRegistry.registryKey(), element.id()));
-                            else builder.addOptionalTag(TagKey.create(tagRegistry.registryKey(), element.id()));
+                            if (element.required()) builder.addTag(element.id());
+                            else builder.addOptionalTag(element.id());
                         } else {
-                            if (element.required()) builder.add(ResourceKey.create(tagRegistry.registryKey(), element.id()));
-                            else builder.addOptional(ResourceKey.create(tagRegistry.registryKey(), element.id()));
+                            if (element.required()) builder.addElement(element.id());
+                            else builder.addOptionalElement(element.id());
                         }
                     }
                 });

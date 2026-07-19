@@ -98,7 +98,7 @@ public class BlockRegistry {
             if (block.defaultBlockState().ignitedByLava()
                     && FlammableBlockRegistry.getDefaultInstance()
                                              .get(block)
-                                             .getBurnChance() == 0) {
+                                             .getBurnOdds() == 0) {
                 FlammableBlockRegistry.getDefaultInstance().add(block, 5, 5);
             }
         }

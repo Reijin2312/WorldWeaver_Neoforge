@@ -8,7 +8,7 @@ import org.betterx.wover.entrypoint.LibWoverUi;
 import org.betterx.wover.events.impl.client.ClientWorldLifecycleImpl;
 import org.betterx.wover.ui.api.VersionChecker;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.Identifier;
@@ -145,7 +145,7 @@ public class WelcomeScreen extends WoverLayoutScreen {
     }
 
     @Override
-    public void renderBackgroundLayer(GuiGraphics guiGraphics, int i, int j, float f) {
+    public void renderBackgroundLayer(GuiGraphicsExtractor guiGraphics, int i, int j, float f) {
         guiGraphics.fill(0, 0, width, height, 0xBD343444);
     }
 }

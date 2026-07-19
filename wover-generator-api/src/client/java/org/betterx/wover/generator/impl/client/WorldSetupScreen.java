@@ -20,7 +20,7 @@ import org.betterx.wover.ui.impl.client.WelcomeScreen;
 import org.betterx.wover.ui.impl.client.WoverLayoutScreen;
 import org.betterx.wover.util.PriorityLinkedList;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
 import net.minecraft.client.gui.screens.worldselection.WorldCreationContext;
 import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
@@ -413,7 +413,7 @@ public class WorldSetupScreen extends LayoutScreen implements BiomeSourceConfigP
     }
 
     @Override
-    public void renderBackgroundLayer(GuiGraphics guiGraphics, int i, int j, float f) {
+    public void renderBackgroundLayer(GuiGraphicsExtractor guiGraphics, int i, int j, float f) {
         guiGraphics.fill(0, 0, width, height, 0xBD343444);
     }
 
@@ -524,3 +524,5 @@ public class WorldSetupScreen extends LayoutScreen implements BiomeSourceConfigP
 //        }
 //    }
 }
+
+

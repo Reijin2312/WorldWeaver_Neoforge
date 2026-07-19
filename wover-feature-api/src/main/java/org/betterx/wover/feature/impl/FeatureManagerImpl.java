@@ -11,15 +11,16 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.levelgen.feature.Feature;
+import org.betterx.wover.feature.impl.features.RandomPatchFeature;
 import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
+import org.betterx.wover.feature.impl.features.RandomPatchConfiguration;
 
 import java.util.function.Function;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 public class FeatureManagerImpl {
-
 
     public static <C extends FeatureConfiguration, F extends Feature<C>> F register(
             @NotNull Identifier id,
@@ -94,6 +95,11 @@ public class FeatureManagerImpl {
             TemplateFeatureConfig.CODEC
     );
 
+    public static final RandomPatchFeature RANDOM_PATCH = register(
+            Identifier.withDefaultNamespace("random_patch"),
+            new RandomPatchFeature(RandomPatchConfiguration.CODEC)
+    );
+
     @ApiStatus.Internal
     public static void ensureStaticInitialization() {
         // no-op
@@ -101,3 +107,4 @@ public class FeatureManagerImpl {
 
 
 }
+

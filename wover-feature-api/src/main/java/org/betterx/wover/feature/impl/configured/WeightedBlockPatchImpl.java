@@ -3,15 +3,15 @@ package org.betterx.wover.feature.impl.configured;
 import org.betterx.wover.feature.api.configured.ConfiguredFeatureKey;
 import org.betterx.wover.feature.api.configured.ConfiguredFeatureManager;
 import org.betterx.wover.feature.api.configured.configurators.WeightedBlockPatch;
+import org.betterx.wover.feature.impl.FeatureManagerImpl;
 
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.levelgen.blockpredicates.BlockPredicate;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
-import net.minecraft.world.level.levelgen.feature.Feature;
-import net.minecraft.world.level.levelgen.feature.RandomPatchFeature;
-import net.minecraft.world.level.levelgen.feature.configurations.RandomPatchConfiguration;
+import org.betterx.wover.feature.impl.features.RandomPatchFeature;
+import org.betterx.wover.feature.impl.features.RandomPatchConfiguration;
 import net.minecraft.world.level.levelgen.feature.stateproviders.WeightedStateProvider;
 
 import org.jetbrains.annotations.NotNull;
@@ -103,7 +103,7 @@ public class WeightedBlockPatchImpl extends WeightedBaseBlockImpl<RandomPatchCon
 
     @Override
     protected @NotNull RandomPatchFeature getFeature() {
-        return (RandomPatchFeature) Feature.RANDOM_PATCH;
+        return FeatureManagerImpl.RANDOM_PATCH;
     }
 
 
@@ -129,3 +129,5 @@ public class WeightedBlockPatchImpl extends WeightedBaseBlockImpl<RandomPatchCon
         }
     }
 }
+
+

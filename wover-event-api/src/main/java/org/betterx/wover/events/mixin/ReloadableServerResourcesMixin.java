@@ -1,5 +1,6 @@
 package org.betterx.wover.events.mixin;
 
+import org.betterx.wover.events.api.types.OnRegistryReady;
 import org.betterx.wover.events.impl.WorldLifecycleImpl;
 
 import net.minecraft.commands.Commands;
@@ -33,6 +34,10 @@ public class ReloadableServerResourcesMixin {
             Executor executor2,
             CallbackInfoReturnable<CompletableFuture<ReloadableServerResources>> cir
     ) {
+        WorldLifecycleImpl.WORLD_REGISTRY_READY.emit(
+                layeredRegistryAccess.getAccessForLoading(RegistryLayer.RELOADABLE),
+                OnRegistryReady.Stage.PREPARATION
+        );
         WorldLifecycleImpl.BEFORE_LOADING_RESOURCES.emit((c) -> c.didLoad(
                 resourceManager,
                 featureFlagSet

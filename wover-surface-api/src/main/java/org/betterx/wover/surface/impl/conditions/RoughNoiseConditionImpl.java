@@ -7,6 +7,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.KeyDispatchDataCodec;
 import net.minecraft.util.valueproviders.FloatProvider;
+import net.minecraft.util.valueproviders.FloatProviders;
 import net.minecraft.util.valueproviders.UniformFloat;
 import net.minecraft.world.level.levelgen.SurfaceRules;
 import net.minecraft.world.level.levelgen.synth.NormalNoise;
@@ -17,7 +18,7 @@ public class RoughNoiseConditionImpl extends WoverRoughNoiseCondition {
                     ResourceKey.codec(Registries.NOISE).fieldOf("noise").forGetter(o -> o.noise),
                     Codec.DOUBLE.fieldOf("min_threshold").forGetter(o -> o.minThreshold),
                     Codec.DOUBLE.fieldOf("max_threshold").orElse(Double.MAX_VALUE).forGetter(o -> o.maxThreshold),
-                    FloatProvider.CODEC.fieldOf("roughness").forGetter(o -> o.roughness)
+                    FloatProviders.CODEC.fieldOf("roughness").forGetter(o -> o.roughness)
             )
             .apply(
                     instance,

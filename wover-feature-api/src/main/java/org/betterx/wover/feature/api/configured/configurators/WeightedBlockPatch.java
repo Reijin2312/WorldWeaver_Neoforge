@@ -1,8 +1,8 @@
 package org.betterx.wover.feature.api.configured.configurators;
 
 import net.minecraft.world.level.levelgen.blockpredicates.BlockPredicate;
-import net.minecraft.world.level.levelgen.feature.RandomPatchFeature;
-import net.minecraft.world.level.levelgen.feature.configurations.RandomPatchConfiguration;
+import org.betterx.wover.feature.impl.features.RandomPatchFeature;
+import org.betterx.wover.feature.impl.features.RandomPatchConfiguration;
 
 /**
  * Places random Blocks in a Patch ({@link RandomPatchFeature}).
@@ -42,3 +42,5 @@ public interface WeightedBlockPatch extends BaseWeightedBlock<RandomPatchConfigu
      */
     WeightedBlockPatch isEmptyAndOn(BlockPredicate predicate);
 }
+
+

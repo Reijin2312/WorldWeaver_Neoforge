@@ -28,12 +28,12 @@
         "wover.ui.mixins.client.json"
     ],
     "depends": {
-        "fabricloader": ">=0.18.1",
+        "fabricloader": ">=0.19.3",
         "minecraft": [
-            "1.21.11"
+            ">=26.1 <26.1.3"
         ],
-        "java": ">=21",
-        "fabric-api": ">=0.139.0"
+        "java": ">=25",
+        "fabric-api": ">=0.155.2"
     },
     "custom": {
         "modmenu": {

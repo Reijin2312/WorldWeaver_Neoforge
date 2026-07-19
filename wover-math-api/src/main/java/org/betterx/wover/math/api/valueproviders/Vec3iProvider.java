@@ -6,13 +6,14 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.Vec3i;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.valueproviders.IntProvider;
+import net.minecraft.util.valueproviders.IntProviders;
 
 public class Vec3iProvider {
     public static final Codec<Vec3iProvider> CODEC = RecordCodecBuilder.create((instance) -> instance
             .group(
-                    IntProvider.CODEC.fieldOf("x").forGetter(o -> o.x),
-                    IntProvider.CODEC.fieldOf("y").forGetter(o -> o.y),
-                    IntProvider.CODEC.fieldOf("z").forGetter(o -> o.z)
+                    IntProviders.CODEC.fieldOf("x").forGetter(o -> o.x),
+                    IntProviders.CODEC.fieldOf("y").forGetter(o -> o.y),
+                    IntProviders.CODEC.fieldOf("z").forGetter(o -> o.z)
             )
             .apply(instance, Vec3iProvider::new));
 
@@ -47,10 +48,10 @@ public class Vec3iProvider {
     }
 
     public int getMinValue() {
-        return Math.min(Math.min(x.getMinValue(), y.getMinValue()), z.getMinValue());
+        return Math.min(Math.min(x.minInclusive(), y.minInclusive()), z.minInclusive());
     }
 
     public int getMaxValue() {
-        return Math.max(Math.max(x.getMaxValue(), y.getMaxValue()), z.getMaxValue());
+        return Math.max(Math.max(x.maxInclusive(), y.maxInclusive()), z.maxInclusive());
     }
 }

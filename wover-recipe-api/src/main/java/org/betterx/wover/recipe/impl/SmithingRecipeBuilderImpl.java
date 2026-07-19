@@ -81,7 +81,7 @@ public class SmithingRecipeBuilderImpl extends BaseRecipeBuilderImpl<SmithingRec
         if (addon == null) {
             throwIllegalStateException("Addon must be set");
         }
-        if (output.getCount() != 1) {
+        if (outputCount() != 1) {
             throwIllegalStateException("Output count must be 1");
         }
     }
@@ -89,7 +89,7 @@ public class SmithingRecipeBuilderImpl extends BaseRecipeBuilderImpl<SmithingRec
     @Override
     public void build(RecipeOutput ctx) {
         final SmithingTransformRecipeBuilder builder = SmithingTransformRecipeBuilder.smithing(
-                template, base, addon, category, output.getItem()
+                template, base, addon, category, outputItem()
         );
 
         for (var item : unlocks.entrySet()) {
@@ -98,3 +98,5 @@ public class SmithingRecipeBuilderImpl extends BaseRecipeBuilderImpl<SmithingRec
         builder.save(ctx, recipeKey(id));
     }
 }
+
+

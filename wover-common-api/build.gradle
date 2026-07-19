@@ -4,5 +4,5 @@ ext {
     baseClass = "WoverSurface"
 }
 dependencies {
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 }

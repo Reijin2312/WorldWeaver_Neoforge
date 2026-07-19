@@ -11,6 +11,7 @@ import net.minecraft.server.Services;
 import net.minecraft.server.WorldStem;
 import net.minecraft.server.level.progress.LevelLoadListener;
 import net.minecraft.server.packs.repository.PackRepository;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.WorldData;
 
@@ -22,6 +23,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.net.Proxy;
+import java.util.Optional;
 
 //priority needs to be low, to ensure that our modifications are applied before other biome hooks
 //otherwise other mods, that for example modify all nether biomes will generate a feature order cycle
@@ -51,10 +53,12 @@ public class MinecraftServerMixin {
             LevelStorageSource.LevelStorageAccess levelStorageAccess,
             PackRepository packRepository,
             WorldStem worldStem,
+            Optional<GameRules> gameRules,
             Proxy proxy,
             DataFixer dataFixer,
             Services services,
             LevelLoadListener levelLoadListener,
+            boolean propagatesCrashes,
             CallbackInfo ci
     ) {
         //in most cases this call is redundant, as we already captured the registries from the

@@ -113,8 +113,12 @@ public abstract class PlaceBlockFeatureConfig implements FeatureConfiguration {
      * @param pos    The position to get the state for.
      * @return The random state.
      */
+    public BlockState getRandomBlock(WorldGenLevel level, RandomSource random, BlockPos pos) {
+        return this.stateProvider.getState(level, random, pos);
+    }
+
     public BlockState getRandomBlock(RandomSource random, BlockPos pos) {
-        return this.stateProvider.getState(random, pos);
+        return getRandomBlock(null, random, pos);
     }
 
     /**
@@ -125,7 +129,7 @@ public abstract class PlaceBlockFeatureConfig implements FeatureConfiguration {
      * @return {@code true} if the block was placed, {@code false} otherwise.
      */
     public boolean place(FeaturePlaceContext<? extends PlaceBlockFeatureConfig> ctx) {
-        BlockState state = getRandomBlock(ctx.random(), ctx.origin());
+        BlockState state = getRandomBlock(ctx.level(), ctx.random(), ctx.origin());
         return placeBlock(ctx, ctx.level(), ctx.origin(), state);
     }
 
@@ -146,3 +150,5 @@ public abstract class PlaceBlockFeatureConfig implements FeatureConfiguration {
             BlockState targetState
     );
 }
+
+

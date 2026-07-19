@@ -49,7 +49,7 @@ public class StonecutterRecipeBuilderImpl extends BaseRecipeBuilderImpl<Stonecut
     @Override
     public void build(RecipeOutput ctx) {
         final SingleItemRecipeBuilder builder = SingleItemRecipeBuilder.stonecutting(
-                input, category, output.getItem(), output.getCount()
+                input, category, outputItem(), outputCount()
         );
 
         for (var item : unlocks.entrySet()) {
@@ -60,3 +60,5 @@ public class StonecutterRecipeBuilderImpl extends BaseRecipeBuilderImpl<Stonecut
         builder.save(ctx, recipeKey(id));
     }
 }
+
+

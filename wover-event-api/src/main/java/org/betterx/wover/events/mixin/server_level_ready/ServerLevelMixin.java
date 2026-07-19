@@ -5,7 +5,6 @@ import org.betterx.wover.events.impl.WorldLifecycleImpl;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.RandomSequences;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.storage.LevelStorageSource;
@@ -33,7 +32,6 @@ public class ServerLevelMixin {
             long seed,
             List list,
             boolean bl2,
-            RandomSequences randomSequences,
             CallbackInfo ci
     ) {
         WorldLifecycleImpl.SERVER_LEVEL_READY.emit((call) -> call.notify((ServerLevel) (Object) this, resourceKey, levelStem, seed));

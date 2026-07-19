@@ -7,6 +7,7 @@ import net.minecraft.data.recipes.SimpleCookingRecipeBuilder;
 import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.crafting.CookingBookCategory;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.ItemLike;
 
@@ -119,7 +120,8 @@ public class CookingRecipeBuilderImpl extends BaseRecipeBuilderImpl<CookingRecip
                     SimpleCookingRecipeBuilder.smelting(
                             input,
                             category,
-                            output.getItem(),
+                            cookingBookCategory(),
+                            outputItem(),
                             xp,
                             cookingTime
                     )
@@ -132,7 +134,8 @@ public class CookingRecipeBuilderImpl extends BaseRecipeBuilderImpl<CookingRecip
                     SimpleCookingRecipeBuilder.blasting(
                             input,
                             category,
-                            output.getItem(),
+                            cookingBookCategory(),
+                            outputItem(),
                             xp,
                             cookingTime / 2
                     )
@@ -145,7 +148,7 @@ public class CookingRecipeBuilderImpl extends BaseRecipeBuilderImpl<CookingRecip
                     SimpleCookingRecipeBuilder.campfireCooking(
                             input,
                             category,
-                            output.getItem(),
+                            outputItem(),
                             xp,
                             cookingTime * 3
                     )
@@ -155,15 +158,23 @@ public class CookingRecipeBuilderImpl extends BaseRecipeBuilderImpl<CookingRecip
         if (smoker) {
             buildRecipe(
                     ctx, "smoker",
-                    SimpleCookingRecipeBuilder.campfireCooking(
+                    SimpleCookingRecipeBuilder.smoking(
                             input,
                             category,
-                            output.getItem(),
+                            outputItem(),
                             xp,
                             cookingTime / 2
                     )
             );
         }
+    }
+
+    private CookingBookCategory cookingBookCategory() {
+        return switch (category) {
+            case FOOD -> CookingBookCategory.FOOD;
+            case BUILDING_BLOCKS, DECORATIONS, REDSTONE -> CookingBookCategory.BLOCKS;
+            default -> CookingBookCategory.MISC;
+        };
     }
 
     private void buildRecipe(RecipeOutput ctx, String suffix, SimpleCookingRecipeBuilder builder) {
@@ -175,3 +186,4 @@ public class CookingRecipeBuilderImpl extends BaseRecipeBuilderImpl<CookingRecip
         builder.save(ctx, recipeKey(loc));
     }
 }
+

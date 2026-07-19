@@ -10,8 +10,6 @@ import net.minecraft.util.KeyDispatchDataCodec;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 
-import java.util.Optional;
-
 public record HasConfiguredFeature(ResourceKey<ConfiguredFeature<?, ?>> key) implements BiomePredicate {
     public static final KeyDispatchDataCodec<HasConfiguredFeature> CODEC = KeyDispatchDataCodec
             .of(ResourceKey.codec(Registries.CONFIGURED_FEATURE)
@@ -31,10 +29,7 @@ public record HasConfiguredFeature(ResourceKey<ConfiguredFeature<?, ?>> key) imp
             for (Holder<PlacedFeature> holders : featuresForStep) {
                 if (holders.value()
                            .getFeatures()
-                           .map(ctx.configuredFeatures::getResourceKey)
-                           .filter(Optional::isPresent)
-                           .map(Optional::get)
-                           .anyMatch(fkey -> fkey.equals(key))
+                           .anyMatch(configured -> configured.is(key))
                 ) {
                     return true;
                 }
@@ -44,3 +39,5 @@ public record HasConfiguredFeature(ResourceKey<ConfiguredFeature<?, ?>> key) imp
         return false;
     }
 }
+
+

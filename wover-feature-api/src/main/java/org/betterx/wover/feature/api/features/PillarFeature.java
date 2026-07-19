@@ -112,7 +112,7 @@ public class PillarFeature extends Feature<PillarFeatureConfig> {
         }
         posnow = featurePlaceContext.origin().mutable();
         for (height = 0; height < maxHeight; ++height) {
-            BlockState state = config.transform(height, maxHeight - 1, posnow, rnd);
+            BlockState state = config.transform(level, height, maxHeight - 1, posnow, rnd);
             level.setBlock(posnow, state, BlockHelper.SET_SILENT);
             posnow.move(config.direction);
         }
@@ -120,3 +120,5 @@ public class PillarFeature extends Feature<PillarFeatureConfig> {
         return true;
     }
 }
+
+

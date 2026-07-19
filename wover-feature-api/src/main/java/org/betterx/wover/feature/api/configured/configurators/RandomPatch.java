@@ -4,8 +4,8 @@ import org.betterx.wover.feature.api.placed.BasePlacedFeatureKey;
 import org.betterx.wover.feature.api.placed.PlacedFeatureKey;
 
 import net.minecraft.core.Holder;
-import net.minecraft.world.level.levelgen.feature.RandomPatchFeature;
-import net.minecraft.world.level.levelgen.feature.configurations.RandomPatchConfiguration;
+import org.betterx.wover.feature.impl.features.RandomPatchFeature;
+import org.betterx.wover.feature.impl.features.RandomPatchConfiguration;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 
 /**
@@ -33,3 +33,5 @@ public interface RandomPatch extends FeatureConfigurator<RandomPatchConfiguratio
      */
     RandomPatch featureToPlace(Holder<PlacedFeature> featureToPlace);
 }
+
+

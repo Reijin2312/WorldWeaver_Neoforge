@@ -8,6 +8,7 @@ import net.minecraft.core.WritableRegistry;
 import net.minecraft.resources.RegistryDataLoader;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.RegistryValidator;
 import net.minecraft.server.packs.resources.ResourceManager;
 
 import org.spongepowered.asm.mixin.Mixin;
@@ -38,13 +39,13 @@ public class RegistryDataLoaderMixin {
         DatapackRegistryBuilderImpl.forEach((key, codec) -> {
             if (codec != null) {
                 LibWoverCore.C.log.debug("    - Adding " + key.identifier());
-                enhanced.add(new RegistryDataLoader.RegistryData(key, codec, false));
+                enhanced.add(new RegistryDataLoader.RegistryData(key, codec, RegistryValidator.none()));
             }
         });
         wt_set_WORLDGEN_REGISTRIES(enhanced);
     }
 
-    @Inject(method = "loadContentsFromManager", at = @At("TAIL"))
+    @Inject(method = "loadContentsFromManager", at = @At("TAIL"), require = 0)
     private static <E> void wover_bootstrap(
             ResourceManager resourceManager,
             RegistryOps.RegistryInfoLookup registryInfoLookup,

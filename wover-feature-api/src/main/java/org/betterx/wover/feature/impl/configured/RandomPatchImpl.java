@@ -3,15 +3,15 @@ package org.betterx.wover.feature.impl.configured;
 import org.betterx.wover.feature.api.configured.ConfiguredFeatureKey;
 import org.betterx.wover.feature.api.configured.configurators.RandomPatch;
 import org.betterx.wover.feature.api.placed.BasePlacedFeatureKey;
+import org.betterx.wover.feature.impl.FeatureManagerImpl;
 
 import net.minecraft.core.Holder;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
-import net.minecraft.world.level.levelgen.feature.Feature;
-import net.minecraft.world.level.levelgen.feature.RandomPatchFeature;
-import net.minecraft.world.level.levelgen.feature.configurations.RandomPatchConfiguration;
+import org.betterx.wover.feature.impl.features.RandomPatchFeature;
+import org.betterx.wover.feature.impl.features.RandomPatchConfiguration;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 
 import org.jetbrains.annotations.NotNull;
@@ -76,7 +76,7 @@ public class RandomPatchImpl extends FeatureConfiguratorImpl<RandomPatchConfigur
 
     @Override
     protected @NotNull RandomPatchFeature getFeature() {
-        return (RandomPatchFeature) Feature.RANDOM_PATCH;
+        return FeatureManagerImpl.RANDOM_PATCH;
     }
 
     @Override
@@ -98,3 +98,5 @@ public class RandomPatchImpl extends FeatureConfiguratorImpl<RandomPatchConfigur
         }
     }
 }
+
+

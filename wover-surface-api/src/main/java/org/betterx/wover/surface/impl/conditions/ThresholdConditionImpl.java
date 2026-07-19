@@ -11,6 +11,7 @@ import net.minecraft.util.KeyDispatchDataCodec;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.valueproviders.ConstantFloat;
 import net.minecraft.util.valueproviders.FloatProvider;
+import net.minecraft.util.valueproviders.FloatProviders;
 import net.minecraft.world.level.levelgen.SurfaceRules;
 import net.minecraft.world.level.levelgen.ThreadSafeLegacyRandomSource;
 
@@ -24,7 +25,7 @@ public class ThresholdConditionImpl extends SurfaceNoiseCondition {
             .group(
                     Codec.LONG.fieldOf("seed").forGetter(p -> p.noiseContext.seed),
                     Codec.DOUBLE.fieldOf("threshold").orElse(0.0).forGetter(p -> p.threshold),
-                    FloatProvider.CODEC.fieldOf("roughness").orElse(ConstantFloat.of(0)).forGetter(p -> p.roughness),
+                    FloatProviders.CODEC.fieldOf("roughness").orElse(ConstantFloat.of(0)).forGetter(p -> p.roughness),
                     Codec.DOUBLE.fieldOf("scale_x").orElse(0.1).forGetter(p -> p.scaleX),
                     Codec.DOUBLE.fieldOf("scale_z").orElse(0.1).forGetter(p -> p.scaleZ)
             )

@@ -13,6 +13,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.level.ItemLike;
@@ -29,14 +30,18 @@ public abstract class BaseRecipeBuilderImpl<I extends BaseRecipeBuilder<I>> impl
     protected RecipeCategory category;
     protected String group;
     protected boolean shouldUnlockAdvancements;
-    protected final @NotNull ItemStack output;
+    protected @NotNull ItemStackTemplate output;
     protected final @NotNull Identifier id;
 
     protected BaseRecipeBuilderImpl(@NotNull Identifier id, @NotNull ItemLike output) {
-        this(id, new ItemStack(output, 1));
+        this(id, new ItemStackTemplate(output.asItem(), 1));
     }
 
     protected BaseRecipeBuilderImpl(@NotNull Identifier id, @NotNull ItemStack output) {
+        this(id, ItemStackTemplate.fromNonEmptyStack(output));
+    }
+
+    protected BaseRecipeBuilderImpl(@NotNull Identifier id, @NotNull ItemStackTemplate output) {
         this.id = id;
         this.category = RecipeCategory.MISC;
         this.output = output;
@@ -50,7 +55,7 @@ public abstract class BaseRecipeBuilderImpl<I extends BaseRecipeBuilder<I>> impl
     }
 
     public I outputCount(int count) {
-        this.output.setCount(count);
+        this.output = this.output.withCount(count);
         return (I) this;
     }
 
@@ -63,6 +68,18 @@ public abstract class BaseRecipeBuilderImpl<I extends BaseRecipeBuilder<I>> impl
     public I group(@Nullable String group) {
         this.group = group;
         return (I) this;
+    }
+
+    protected ItemStackTemplate outputTemplate() {
+        return output;
+    }
+
+    protected Item outputItem() {
+        return output.item().value();
+    }
+
+    protected int outputCount() {
+        return output.count();
     }
 
     // Advancements
@@ -168,7 +185,7 @@ public abstract class BaseRecipeBuilderImpl<I extends BaseRecipeBuilder<I>> impl
     }
 
     protected void validate() {
-        if (output.getCount() <= 0) {
+        if (output.count() <= 0) {
             throwIllegalStateException("Output-Count is zero");
         }
         if (category == null) {
@@ -199,3 +216,5 @@ public abstract class BaseRecipeBuilderImpl<I extends BaseRecipeBuilder<I>> impl
 //        SmithingTrimRecipeBuilder.smithingTrim(ingredient, ingredient, ingredient, category);
 //    }
 }
+
+

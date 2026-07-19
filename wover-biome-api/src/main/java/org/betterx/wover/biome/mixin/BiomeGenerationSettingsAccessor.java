@@ -26,8 +26,8 @@ public interface BiomeGenerationSettingsAccessor {
     @Accessor("featureSet")
     void wover_setFeatureSet(Supplier<Set<PlacedFeature>> featureSet);
 
-    @Accessor("flowerFeatures")
-    void wover_setFlowerFeatures(Supplier<List<ConfiguredFeature<?, ?>>> flowerFeatures);
+    @Accessor("boneMealFeatures")
+    void wover_setBoneMealFeatures(Supplier<List<ConfiguredFeature<?, ?>>> boneMealFeatures);
 
     @Accessor("carvers")
     HolderSet<ConfiguredWorldCarver<?>> wover_getCarvers();

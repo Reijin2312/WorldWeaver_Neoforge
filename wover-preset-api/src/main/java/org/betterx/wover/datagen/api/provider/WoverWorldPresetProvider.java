@@ -13,8 +13,8 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.world.level.levelgen.presets.WorldPreset;
 
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider;
+import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagsProvider;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -23,7 +23,7 @@ import java.util.concurrent.CompletableFuture;
  */
 public abstract class WoverWorldPresetProvider
         extends WoverRegistryContentProvider<WorldPreset>
-        implements WoverDataProvider.Secondary<FabricTagProvider<WorldPreset>> {
+        implements WoverDataProvider.Secondary<FabricTagsProvider<WorldPreset>> {
     /**
      * Creates a new instance of {@link WoverWorldPresetProvider}.
      *
@@ -72,8 +72,8 @@ public abstract class WoverWorldPresetProvider
      * @param registriesFuture A future sent from the data generator
      * @return A new {@link TagsProvider}
      */
-    public FabricTagProvider<WorldPreset> getSecondaryProvider(
-            FabricDataOutput output,
+    public FabricTagsProvider<WorldPreset> getSecondaryProvider(
+            FabricPackOutput output,
             CompletableFuture<HolderLookup.Provider> registriesFuture
     ) {
         return new WorldPresetTagProvider(modCore).getProvider(output, registriesFuture);

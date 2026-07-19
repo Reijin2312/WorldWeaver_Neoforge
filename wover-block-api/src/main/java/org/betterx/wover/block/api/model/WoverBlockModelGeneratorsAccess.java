@@ -4,10 +4,12 @@ import net.minecraft.client.data.models.BlockModelGenerators;
 import net.minecraft.client.data.models.ItemModelOutput;
 import net.minecraft.client.data.models.MultiVariant;
 import net.minecraft.client.data.models.blockstates.MultiVariantGenerator;
+import net.minecraft.client.data.models.model.ItemModelUtils;
 import net.minecraft.client.data.models.model.ModelLocationUtils;
 import net.minecraft.client.data.models.model.ModelTemplates;
 import net.minecraft.client.data.models.model.TextureMapping;
 import net.minecraft.client.data.models.model.TexturedModel;
+import net.minecraft.client.color.item.ItemTintSource;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
@@ -57,6 +59,10 @@ public class WoverBlockModelGeneratorsAccess extends BlockModelGenerators {
         this.registerSimpleItemModel(block, model);
     }
 
+    public void delegateTintedItemModel(Block block, Identifier model, ItemTintSource tintSource) {
+        this.itemModelOutput.accept(block.asItem(), ItemModelUtils.tintedModel(model, tintSource));
+    }
+
     public void createSimpleFlatItemModel(Item item) {
         this.registerSimpleItemModel(item, this.createFlatItemModel(item));
     }
@@ -68,21 +74,6 @@ public class WoverBlockModelGeneratorsAccess extends BlockModelGenerators {
         }
         Identifier modelLocation = this.createFlatItemModelWithBlockTexture(item, block);
         this.registerSimpleItemModel(item, modelLocation);
-    }
-
-    @Override
-    public void createDoor(Block block) {
-        super.createDoor(block);
-    }
-
-    @Override
-    public void createOrientableTrapdoor(Block block) {
-        super.createOrientableTrapdoor(block);
-    }
-
-    @Override
-    public void createTrapdoor(Block block) {
-        super.createTrapdoor(block);
     }
 
     public void createCraftingTableLike(

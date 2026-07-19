@@ -5,11 +5,11 @@ import net.minecraft.core.HolderSet;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.tags.FeatureTags;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeGenerationSettings;
 import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
-import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 
 import com.google.common.base.Suppliers;
@@ -44,7 +44,7 @@ public class GenerationSettingsWorker {
         if (customizedFeatures != null) {
             generationSettings.features = ImmutableList.copyOf(customizedFeatures);
             generationSettings.featureSet = Suppliers.memoize(this::createPlacedFeatrueSet);
-            generationSettings.flowerFeatures = Suppliers.memoize(this::createFlowerFeatures);
+            generationSettings.boneMealFeatures = Suppliers.memoize(this::createBoneMealFeatures);
             customizedFeatures = null;
         }
     }
@@ -59,10 +59,11 @@ public class GenerationSettingsWorker {
         return getFlatFeatureStream().collect(Collectors.toSet());
     }
 
-    private List<ConfiguredFeature<?, ?>> createFlowerFeatures() {
+    private List<ConfiguredFeature<?, ?>> createBoneMealFeatures() {
         return getFlatFeatureStream()
                 .flatMap(PlacedFeature::getFeatures)
-                .filter((configured) -> configured.feature() == Feature.FLOWER)
+                .filter(configured -> configured.is(FeatureTags.CAN_SPAWN_FROM_BONE_MEAL))
+                .map(Holder::value)
                 .collect(ImmutableList.toImmutableList());
     }
 
@@ -108,3 +109,5 @@ public class GenerationSettingsWorker {
         }
     }
 }
+
+

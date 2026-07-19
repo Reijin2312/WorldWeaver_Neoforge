@@ -3,6 +3,7 @@ package org.betterx.wover.block.api.model;
 import org.betterx.wover.entrypoint.LibWoverBlock;
 
 import com.mojang.math.Quadrant;
+import net.minecraft.client.color.item.ItemTintSource;
 import net.minecraft.client.data.models.BlockModelGenerators;
 import net.minecraft.client.data.models.blockstates.MultiPartGenerator;
 import net.minecraft.client.data.models.blockstates.MultiVariantGenerator;
@@ -13,7 +14,8 @@ import net.minecraft.client.data.models.model.ModelTemplates;
 import net.minecraft.client.data.models.model.TextureMapping;
 import net.minecraft.client.data.models.model.TextureSlot;
 import net.minecraft.client.data.models.model.TexturedModel;
-import net.minecraft.client.renderer.block.model.Variant;
+import net.minecraft.client.renderer.block.dispatch.Variant;
+import net.minecraft.client.resources.model.sprite.Material;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
@@ -89,11 +91,15 @@ public class WoverBlockModelGenerators {
     }
 
     public void delegateItemModel(Block block) {
-        this.vanillaGenerator.delegateItemModel(block, TextureMapping.getBlockTexture(block));
+        this.vanillaGenerator.delegateItemModel(block, ModelLocationUtils.getModelLocation(block));
     }
 
     public void delegateItemModel(Block block, Identifier Identifier) {
         this.vanillaGenerator.delegateItemModel(block, Identifier);
+    }
+
+    public void delegateTintedItemModel(Block block, Identifier identifier, ItemTintSource tintSource) {
+        this.vanillaGenerator.delegateTintedItemModel(block, identifier, tintSource);
     }
 
     public TexturedModel getTextureModels(Block block, TexturedModel defaultModel) {
@@ -122,6 +128,13 @@ public class WoverBlockModelGenerators {
             TextureSlot slotA,
             Identifier locationA
     ) {
+        return textureMappingOf(slotA, material(locationA));
+    }
+
+    public static TextureMapping textureMappingOf(
+            TextureSlot slotA,
+            Material locationA
+    ) {
         return new TextureMapping().put(slotA, locationA);
     }
 
@@ -131,7 +144,20 @@ public class WoverBlockModelGenerators {
             TextureSlot slotB,
             Identifier locationB
     ) {
+        return textureMappingOf(slotA, material(locationA), slotB, material(locationB));
+    }
+
+    public static TextureMapping textureMappingOf(
+            TextureSlot slotA,
+            Material locationA,
+            TextureSlot slotB,
+            Material locationB
+    ) {
         return textureMappingOf(slotA, locationA).put(slotB, locationB);
+    }
+
+    private static Material material(Identifier location) {
+        return new Material(location);
     }
 
     public void createBookshelf(Block shelf, Block planks) {
@@ -186,7 +212,7 @@ public class WoverBlockModelGenerators {
     }
 
     public void createBarrel(Block barrelBlock) {
-        Identifier openTop = TextureMapping.getBlockTexture(barrelBlock, "_top_open");
+        Material openTop = TextureMapping.getBlockTexture(barrelBlock, "_top_open");
         Identifier closedModel = TexturedModel.CUBE_TOP_BOTTOM.create(barrelBlock, this.vanillaGenerator.modelOutput());
         Identifier openModel = TexturedModel.CUBE_TOP_BOTTOM
                 .get(barrelBlock)
@@ -211,14 +237,14 @@ public class WoverBlockModelGenerators {
         acceptBlockState(MultiPartGenerator
                 .multiPart(composterBlock)
                 .with(BlockModelGenerators.plainVariant(location))
-                .with(BlockModelGenerators.condition().term(BlockStateProperties.LEVEL_COMPOSTER, 1), BlockModelGenerators.plainVariant(TextureMapping.getBlockTexture(Blocks.COMPOSTER, "_contents1")))
-                .with(BlockModelGenerators.condition().term(BlockStateProperties.LEVEL_COMPOSTER, 2), BlockModelGenerators.plainVariant(TextureMapping.getBlockTexture(Blocks.COMPOSTER, "_contents2")))
-                .with(BlockModelGenerators.condition().term(BlockStateProperties.LEVEL_COMPOSTER, 3), BlockModelGenerators.plainVariant(TextureMapping.getBlockTexture(Blocks.COMPOSTER, "_contents3")))
-                .with(BlockModelGenerators.condition().term(BlockStateProperties.LEVEL_COMPOSTER, 4), BlockModelGenerators.plainVariant(TextureMapping.getBlockTexture(Blocks.COMPOSTER, "_contents4")))
-                .with(BlockModelGenerators.condition().term(BlockStateProperties.LEVEL_COMPOSTER, 5), BlockModelGenerators.plainVariant(TextureMapping.getBlockTexture(Blocks.COMPOSTER, "_contents5")))
-                .with(BlockModelGenerators.condition().term(BlockStateProperties.LEVEL_COMPOSTER, 6), BlockModelGenerators.plainVariant(TextureMapping.getBlockTexture(Blocks.COMPOSTER, "_contents6")))
-                .with(BlockModelGenerators.condition().term(BlockStateProperties.LEVEL_COMPOSTER, 7), BlockModelGenerators.plainVariant(TextureMapping.getBlockTexture(Blocks.COMPOSTER, "_contents7")))
-                .with(BlockModelGenerators.condition().term(BlockStateProperties.LEVEL_COMPOSTER, 8), BlockModelGenerators.plainVariant(TextureMapping.getBlockTexture(Blocks.COMPOSTER, "_contents_ready"))));
+                .with(BlockModelGenerators.condition().term(BlockStateProperties.LEVEL_COMPOSTER, 1), BlockModelGenerators.plainVariant(ModelLocationUtils.getModelLocation(Blocks.COMPOSTER, "_contents1")))
+                .with(BlockModelGenerators.condition().term(BlockStateProperties.LEVEL_COMPOSTER, 2), BlockModelGenerators.plainVariant(ModelLocationUtils.getModelLocation(Blocks.COMPOSTER, "_contents2")))
+                .with(BlockModelGenerators.condition().term(BlockStateProperties.LEVEL_COMPOSTER, 3), BlockModelGenerators.plainVariant(ModelLocationUtils.getModelLocation(Blocks.COMPOSTER, "_contents3")))
+                .with(BlockModelGenerators.condition().term(BlockStateProperties.LEVEL_COMPOSTER, 4), BlockModelGenerators.plainVariant(ModelLocationUtils.getModelLocation(Blocks.COMPOSTER, "_contents4")))
+                .with(BlockModelGenerators.condition().term(BlockStateProperties.LEVEL_COMPOSTER, 5), BlockModelGenerators.plainVariant(ModelLocationUtils.getModelLocation(Blocks.COMPOSTER, "_contents5")))
+                .with(BlockModelGenerators.condition().term(BlockStateProperties.LEVEL_COMPOSTER, 6), BlockModelGenerators.plainVariant(ModelLocationUtils.getModelLocation(Blocks.COMPOSTER, "_contents6")))
+                .with(BlockModelGenerators.condition().term(BlockStateProperties.LEVEL_COMPOSTER, 7), BlockModelGenerators.plainVariant(ModelLocationUtils.getModelLocation(Blocks.COMPOSTER, "_contents7")))
+                .with(BlockModelGenerators.condition().term(BlockStateProperties.LEVEL_COMPOSTER, 8), BlockModelGenerators.plainVariant(ModelLocationUtils.getModelLocation(Blocks.COMPOSTER, "_contents_ready"))));
         delegateItemModel(composterBlock, location);
     }
 
@@ -243,7 +269,7 @@ public class WoverBlockModelGenerators {
     }
 
     public void createPressurePlate(Block plateBlock, Identifier textureLocation) {
-        createPressurePlate(plateBlock, new TextureMapping().put(TextureSlot.TEXTURE, textureLocation));
+        createPressurePlate(plateBlock, new TextureMapping().put(TextureSlot.TEXTURE, material(textureLocation)));
     }
 
     public void createPressurePlate(Block materialBlock, Block plateBlock) {
@@ -264,7 +290,7 @@ public class WoverBlockModelGenerators {
 
 
     public void createButton(Block buttonBlock, Identifier textureLocation) {
-        createButton(buttonBlock, new TextureMapping().put(TextureSlot.TEXTURE, textureLocation));
+        createButton(buttonBlock, new TextureMapping().put(TextureSlot.TEXTURE, material(textureLocation)));
     }
 
     public void createButton(Block materialBlock, Block buttonBlock) {
@@ -284,7 +310,7 @@ public class WoverBlockModelGenerators {
     }
 
     public void createFence(Block fenceBlock, Identifier textureLocation) {
-        createFence(fenceBlock, new TextureMapping().put(TextureSlot.TEXTURE, textureLocation));
+        createFence(fenceBlock, new TextureMapping().put(TextureSlot.TEXTURE, material(textureLocation)));
     }
 
     public void createFence(Block materialBlock, Block fenceBlock) {
@@ -304,7 +330,7 @@ public class WoverBlockModelGenerators {
     }
 
     public void createFenceGate(Block gateBlock, Identifier textureLocation) {
-        createFence(gateBlock, new TextureMapping().put(TextureSlot.TEXTURE, textureLocation));
+        createFenceGate(gateBlock, new TextureMapping().put(TextureSlot.TEXTURE, material(textureLocation)));
     }
 
     public void createFenceGate(Block materialBlock, Block gateBlock) {
@@ -332,9 +358,9 @@ public class WoverBlockModelGenerators {
             Identifier bottomTextureLocation
     ) {
         createStairs(stairBlock, new TextureMapping()
-                .put(TextureSlot.TOP, topTextureLocation)
-                .put(TextureSlot.SIDE, sideTextureLocation)
-                .put(TextureSlot.BOTTOM, bottomTextureLocation));
+                .put(TextureSlot.TOP, material(topTextureLocation))
+                .put(TextureSlot.SIDE, material(sideTextureLocation))
+                .put(TextureSlot.BOTTOM, material(bottomTextureLocation)));
     }
 
     public void createStairs(Block materialBlock, Block stairBlock) {
@@ -403,10 +429,9 @@ public class WoverBlockModelGenerators {
     }
 
     public void createRotatedPillar(Block pillarBlock) {
-        var res = TextureMapping.getBlockTexture(pillarBlock);
         createRotatedPillar(pillarBlock, new TextureMapping()
-                .put(TextureSlot.SIDE, res.withSuffix("_side"))
-                .put(TextureSlot.END, res.withSuffix("_top")));
+                .put(TextureSlot.SIDE, TextureMapping.getBlockTexture(pillarBlock, "_side"))
+                .put(TextureSlot.END, TextureMapping.getBlockTexture(pillarBlock, "_top")));
     }
 
     public void createRotatedPillar(Block pillarBlock, TextureMapping mapping) {
@@ -441,7 +466,7 @@ public class WoverBlockModelGenerators {
 
 
     public void createWallItem(Block block, Identifier textureLocation) {
-        createInventoryModel(block, ModelTemplates.WALL_INVENTORY, new TextureMapping().put(TextureSlot.WALL, textureLocation));
+        createInventoryModel(block, ModelTemplates.WALL_INVENTORY, new TextureMapping().put(TextureSlot.WALL, material(textureLocation)));
         vanillaGenerator.skipAutoItemBlock(block);
     }
 
@@ -452,7 +477,7 @@ public class WoverBlockModelGenerators {
         }
         final var item = block.asItem();
         if (item != Items.AIR) {
-            ModelTemplates.FLAT_ITEM.create(ModelLocationUtils.getModelLocation(item), TextureMapping.layer0(itemLocation), vanillaGenerator.modelOutput());
+            ModelTemplates.FLAT_ITEM.create(ModelLocationUtils.getModelLocation(item), TextureMapping.layer0(material(itemLocation)), vanillaGenerator.modelOutput());
         }
         vanillaGenerator.skipAutoItemBlock(block);
     }

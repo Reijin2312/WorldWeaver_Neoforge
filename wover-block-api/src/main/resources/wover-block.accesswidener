@@ -1,4 +1,4 @@
-accessWidener   v2  named
+accessWidener   v2  official
 
 accessible field net/minecraft/client/data/models/BlockModelGenerators TEXTURED_MODELS Ljava/util/Map;
 accessible field net/minecraft/client/data/models/BlockModelGenerators ROTATIONS_COLUMN_WITH_FACING Lnet/minecraft/client/data/models/blockstates/PropertyDispatch;

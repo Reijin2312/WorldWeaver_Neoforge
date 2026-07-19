@@ -28,6 +28,7 @@ import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.levelgen.*;
+import net.minecraft.world.level.levelgen.synth.NormalNoise;
 
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
@@ -40,6 +41,10 @@ public class WoverChunkGenerator extends NoiseBasedChunkGenerator implements
     public static final Identifier ID = LibWoverWorldGenerator.C.id("betterx");
 
     protected static final NoiseSettings NETHER_NOISE_SETTINGS_AMPLIFIED = NoiseSettings.create(0, 256, 1, 4);
+    private static final ResourceKey<DensityFunction> BASE_3D_NOISE_NETHER = ResourceKey.create(
+            Registries.DENSITY_FUNCTION,
+            Identifier.withDefaultNamespace("nether/base_3d_noise")
+    );
     public static final ResourceKey<NoiseGeneratorSettings> AMPLIFIED_NETHER = ResourceKey.create(
             Registries.NOISE_SETTINGS,
             LibWoverWorldGenerator.C.id("amplified_nether")
@@ -177,11 +182,7 @@ public class WoverChunkGenerator extends NoiseBasedChunkGenerator implements
                 NETHER_NOISE_SETTINGS_AMPLIFIED,
                 Blocks.NETHERRACK.defaultBlockState(),
                 Blocks.LAVA.defaultBlockState(),
-                NoiseRouterData.noNewCaves(
-                        densityGetter,
-                        bootstapContext.lookup(Registries.NOISE),
-                        NoiseRouterData.slideNetherLike(densityGetter, 0, 256)
-                ),
+                amplifiedNetherRouter(densityGetter, bootstapContext.lookup(Registries.NOISE)),
                 SurfaceRuleData.nether(),
                 List.of(),
                 32,
@@ -190,6 +191,74 @@ public class WoverChunkGenerator extends NoiseBasedChunkGenerator implements
                 false,
                 true
         );
+    }
+
+    private static NoiseRouter amplifiedNetherRouter(
+            HolderGetter<DensityFunction> functions,
+            HolderGetter<NormalNoise.NoiseParameters> noises
+    ) {
+        DensityFunction temperature = DensityFunctions.shiftedNoise2d(
+                DensityFunctions.zero(), DensityFunctions.zero(), 0.25, noises.getOrThrow(Noises.TEMPERATURE_NETHER)
+        );
+        DensityFunction vegetation = DensityFunctions.shiftedNoise2d(
+                DensityFunctions.zero(), DensityFunctions.zero(), 0.25, noises.getOrThrow(Noises.VEGETATION_NETHER)
+        );
+        DensityFunction slide = slideNetherLike(functions, 0, 256);
+        DensityFunction fullNoise = postProcess(slide);
+        return new NoiseRouter(
+                DensityFunctions.zero(),
+                DensityFunctions.zero(),
+                DensityFunctions.zero(),
+                DensityFunctions.zero(),
+                temperature,
+                vegetation,
+                DensityFunctions.zero(),
+                DensityFunctions.zero(),
+                DensityFunctions.zero(),
+                DensityFunctions.zero(),
+                DensityFunctions.zero(),
+                fullNoise,
+                DensityFunctions.zero(),
+                DensityFunctions.zero(),
+                DensityFunctions.zero()
+        );
+    }
+
+    private static DensityFunction slideNetherLike(
+            HolderGetter<DensityFunction> functions,
+            int minY,
+            int height
+    ) {
+        return slide(getFunction(functions, BASE_3D_NOISE_NETHER), minY, height, 24, 0, 0.9375, -8, 24, 2.5);
+    }
+
+    private static DensityFunction getFunction(
+            HolderGetter<DensityFunction> functions,
+            ResourceKey<DensityFunction> name
+    ) {
+        return new DensityFunctions.HolderHolder(functions.getOrThrow(name));
+    }
+
+    private static DensityFunction postProcess(DensityFunction slide) {
+        DensityFunction blended = DensityFunctions.blendDensity(slide);
+        return DensityFunctions.mul(DensityFunctions.interpolated(blended), DensityFunctions.constant(0.64)).squeeze();
+    }
+
+    private static DensityFunction slide(
+            DensityFunction caves,
+            int minY,
+            int height,
+            int topStartY,
+            int topEndY,
+            double topTarget,
+            int bottomStartY,
+            int bottomEndY,
+            double bottomTarget
+    ) {
+        DensityFunction topFactor = DensityFunctions.yClampedGradient(minY + height - topStartY, minY + height - topEndY, 1.0, 0.0);
+        DensityFunction noiseValue = DensityFunctions.lerp(topFactor, topTarget, caves);
+        DensityFunction bottomFactor = DensityFunctions.yClampedGradient(minY + bottomStartY, minY + bottomEndY, 0.0, 1.0);
+        return DensityFunctions.lerp(bottomFactor, bottomTarget, noiseValue);
     }
 
     @Override
@@ -203,3 +272,5 @@ public class WoverChunkGenerator extends NoiseBasedChunkGenerator implements
         );
     }
 }
+
+

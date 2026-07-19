@@ -232,8 +232,8 @@ public class WoverBiomePicker {
 
 
     public static @Nullable Holder<Biome> getBiomeAt(WorldGenLevel world, BlockPos testPos) {
-        final ChunkPos chunkPos = new ChunkPos(testPos);
-        final ChunkAccess chunk = world.getChunkSource().getChunk(chunkPos.x, chunkPos.z, ChunkStatus.BIOMES, false);
+        final ChunkPos chunkPos = ChunkPos.containing(testPos);
+        final ChunkAccess chunk = world.getChunkSource().getChunk(chunkPos.x(), chunkPos.z(), ChunkStatus.BIOMES, false);
         if (chunk != null) {
             return chunk.getNoiseBiome(
                     QuartPos.fromBlock(testPos.getX()),
@@ -245,3 +245,5 @@ public class WoverBiomePicker {
         }
     }
 }
+
+

@@ -18,7 +18,7 @@ allprojects { projIt ->
     apply plugin: 'idea'
     apply plugin: 'eclipse'
     apply plugin: 'maven-publish'
-    apply plugin: 'fabric-loom'
+    apply plugin: 'net.fabricmc.fabric-loom'
 
     repositories {
         maven { url "https://maven.dblsaiko.net/" }
@@ -29,6 +29,7 @@ allprojects { projIt ->
         maven { url 'https://maven.terraformersmc.com/releases' }
         maven { url 'https://maven.terraformersmc.com' }
         maven { url 'https://maven.ambertation.de/releases' }
+        maven { url 'https://api.modrinth.com/maven' }
     }
 
     version = rootProject.mod_version
@@ -172,8 +173,7 @@ allprojects { projIt ->
     dependencies {
         println("Adding dependencies for ${projIt.name}")
         minecraft "com.mojang:minecraft:${project.minecraft_version}"
-        mappings loom.officialMojangMappings()
-        modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+        implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
         dev sourceSets.main.output
 
@@ -189,7 +189,7 @@ allprojects { projIt ->
             if (local_wunderlib) {
                 implementation project(path: ":wunderlib", configuration: 'dev')
             } else {
-                modApi "de.ambertation:wunderlib:${project.wunderlib_version}"
+                api "de.ambertation:wunderlib:${project.wunderlib_version}"
             }
         }
     }
@@ -209,7 +209,7 @@ allprojects { projIt ->
     // see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
     tasks.withType(JavaCompile) {
         options.encoding = "UTF-8"
-        it.options.release = 21
+        it.options.release = 25
     }
 
     tasks.withType(AbstractArchiveTask).configureEach {
@@ -256,7 +256,7 @@ allprojects {
 }
 
 subprojects.each {
-    remapJar.dependsOn("${it.path}:remapJar")
+    jar.dependsOn("${it.path}:jar")
 }
 
 tasks.sourcesJar {
@@ -266,10 +266,10 @@ tasks.sourcesJar {
 
 //dependencies for the main Libraray
 dependencies {
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
     subprojects.each {
-        api project(path: "${it.path}", configuration: "namedElements")
+        api project(path: "${it.path}", configuration: "dev")
 
 //        testmodImplementation project("${it.path}").sourceSets.testmod.output
 //        testmodClientImplementation project("${it.path}").sourceSets.testmodClient.output
@@ -279,13 +279,13 @@ dependencies {
 
         include project("${it.path}")
     }
-    modCompileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
+    compileOnly "maven.modrinth:modmenu:${project.modmenu_version}"
 
     if (local_wunderlib) {
         implementation project(path: ":wunderlib", configuration: 'dev')
         include project(path: ":wunderlib")
     } else {
-        modApi "de.ambertation:wunderlib:${project.wunderlib_version}"
+        api "de.ambertation:wunderlib:${project.wunderlib_version}"
         include "de.ambertation:wunderlib:${project.wunderlib_version}"
     }
 }
@@ -387,8 +387,7 @@ task javadocJar(type: Jar, dependsOn: [javadoc, copyHighlightJs]) {
 }
 
 artifacts {
-    // Local Loom consumers run in the named namespace. Publishing remapJar here makes runClient load the
-    // production/intermediary access widener after a build; the regular jar task is the named dev artifact.
+    // Minecraft 26.1 is distributed without obfuscation, so the regular jar is also the development artifact.
     dev jar
     localDev jar
     archives sourcesJar

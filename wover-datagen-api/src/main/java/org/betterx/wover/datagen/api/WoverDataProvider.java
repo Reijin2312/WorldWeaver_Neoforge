@@ -2,7 +2,7 @@ package org.betterx.wover.datagen.api;
 
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.DataProvider;
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
+import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -20,7 +20,7 @@ public interface WoverDataProvider<T extends DataProvider> {
      * @return A new {@link DataProvider}
      */
     T getProvider(
-            FabricDataOutput output,
+            FabricPackOutput output,
             CompletableFuture<HolderLookup.Provider> registriesFuture
     );
 
@@ -38,7 +38,7 @@ public interface WoverDataProvider<T extends DataProvider> {
          * @return A new {@link DataProvider}
          */
         T getSecondaryProvider(
-                FabricDataOutput output,
+                FabricPackOutput output,
                 CompletableFuture<HolderLookup.Provider> registriesFuture
         );
     }
@@ -57,7 +57,7 @@ public interface WoverDataProvider<T extends DataProvider> {
          * @return A new {@link DataProvider}
          */
         T getTertiaryProvider(
-                FabricDataOutput output,
+                FabricPackOutput output,
                 CompletableFuture<HolderLookup.Provider> registriesFuture
         );
     }
