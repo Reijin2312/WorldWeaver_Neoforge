@@ -21,10 +21,6 @@ public class BiomePredicateRegistryImpl {
             false
     );
 
-    static {
-        onBootstrap(BIOME_PREDICATES);
-    }
-
     public static MapCodec<? extends BiomePredicate> register(
             Registry<MapCodec<? extends BiomePredicate>> registry,
             Identifier location,

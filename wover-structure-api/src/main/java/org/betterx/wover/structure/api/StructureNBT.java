@@ -19,8 +19,6 @@ import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 
-import com.google.common.collect.Maps;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -31,6 +29,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.jetbrains.annotations.Nullable;
 
 public class StructureNBT {
@@ -56,7 +55,7 @@ public class StructureNBT {
         return Mirror.values()[random.nextInt(3)];
     }
 
-    private static final Map<Identifier, StructureNBT> STRUCTURE_CACHE = Maps.newHashMap();
+    private static final Map<Identifier, StructureNBT> STRUCTURE_CACHE = new ConcurrentHashMap<>();
 
     public static StructureNBT create(Identifier location) {
         return STRUCTURE_CACHE.computeIfAbsent(location, StructureNBT::new);
@@ -100,7 +99,7 @@ public class StructureNBT {
         return pos.offset(-blockpos2.getX() >> 1, 0, -blockpos2.getZ() >> 1);
     }
 
-    private static final Map<Identifier, StructureTemplate> READER_CACHE = Maps.newHashMap();
+    private static final Map<Identifier, StructureTemplate> READER_CACHE = new ConcurrentHashMap<>();
 
     private static StructureTemplate readStructureFromJar(Identifier resource) {
         return READER_CACHE.computeIfAbsent(resource, r -> _readStructureFromJar(r));

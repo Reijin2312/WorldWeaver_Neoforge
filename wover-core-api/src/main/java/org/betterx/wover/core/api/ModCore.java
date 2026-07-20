@@ -12,6 +12,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 
@@ -24,7 +25,7 @@ import java.util.stream.Stream;
  * {@link net.fabricmc.api.ModInitializer}).
  */
 public final class ModCore implements Version.ModVersionProvider {
-    private static final HashMap<String, ModCore> cache = new HashMap<>();
+    private static final Map<String, ModCore> cache = new ConcurrentHashMap<>();
 
     private final List<Identifier> providedDatapacks = new LinkedList<>();
     /**

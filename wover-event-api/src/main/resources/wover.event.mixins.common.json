@@ -13,7 +13,6 @@
     "server_level_ready.ServerLevelMixin",
     "world_folder.MainMixin",
     "world_registry.WorldDimensionDataMixin",
-    "world_registry.WorldLoaderMixin",
     "world_registry.WorldStemMixin"
   ],
   "injectors": {

@@ -394,6 +394,25 @@ artifacts {
     archives javadocJar
 }
 
+def modrinthModsDir = file(findProperty("modrinth_mods_dir") ?: "C:/Users/Redmi/AppData/Roaming/ModrinthApp/profiles/Fabric 26.1.2/mods")
+def fabricRuntimeProjects = [project]
+if (local_wunderlib) fabricRuntimeProjects.add(project(":wunderlib"))
+
+tasks.register("copyModrinthJars", Copy) {
+    dependsOn {
+        fabricRuntimeProjects.collect { it.tasks.findByName("jar") }.findAll { it != null }
+    }
+    from {
+        fabricRuntimeProjects.collect { it.tasks.findByName("jar")?.outputs?.files }.findAll { it != null }
+    }
+    rename { fileName -> fileName.endsWith(".jar") ? "${fileName[0..-5]}-fabric.jar" : fileName }
+    into(modrinthModsDir)
+}
+
+tasks.named("build") {
+    finalizedBy("copyModrinthJars")
+}
+
 idea {
     module {
         excludeDirs += file('javadoc')
