@@ -9,9 +9,12 @@ import org.betterx.wover.common.generator.api.biomesource.ReloadableBiomeSource;
 import org.betterx.wover.common.generator.api.chunkgenerator.EnforceableChunkGenerator;
 import org.betterx.wover.common.generator.api.chunkgenerator.RebuildableFeaturesPerStep;
 import org.betterx.wover.common.generator.api.chunkgenerator.RestorableBiomeSource;
+import org.betterx.wover.common.generator.impl.compat.LithostitchedBiomeSourceCompat;
 import org.betterx.wover.common.surface.api.InjectableSurfaceRules;
 import org.betterx.wover.core.api.IntegrationCore;
 import org.betterx.wover.entrypoint.LibWoverWorldGenerator;
+import org.betterx.wover.generator.impl.biomesource.end.WoverEndBiomeSource;
+import org.betterx.wover.generator.impl.compat.BlueprintBiomeSourceCompat;
 import org.betterx.wover.surface.impl.SurfaceRuleUtil;
 
 import com.mojang.serialization.MapCodec;
@@ -105,6 +108,13 @@ public class WoverChunkGenerator extends NoiseBasedChunkGenerator implements
      */
     @Override
     public void restoreInitialBiomeSource(ResourceKey<LevelStem> dimensionKey) {
+        if (BlueprintBiomeSourceCompat.wraps(getBiomeSource(), initialBiomeSource)) {
+            if (LevelStem.END.equals(dimensionKey) && wover_removeBlueprintEndWrapper()) return;
+
+            ChunkGeneratorHelper.rebuildFeaturesPerStep(this, getBiomeSource());
+            return;
+        }
+
         if (initialBiomeSource != getBiomeSource()) {
             if (this instanceof ChunkGeneratorAccessor acc) {
                 if (initialBiomeSource instanceof MergeableBiomeSource<?> bs) {
@@ -183,7 +193,7 @@ public class WoverChunkGenerator extends NoiseBasedChunkGenerator implements
                 Blocks.NETHERRACK.defaultBlockState(),
                 Blocks.LAVA.defaultBlockState(),
                 amplifiedNetherRouter(densityGetter, bootstapContext.lookup(Registries.NOISE)),
-                SurfaceRuleData.nether(),
+                SurfaceRuleData.nether(bootstapContext.lookup(Registries.BIOME)),
                 List.of(),
                 32,
                 false,
@@ -265,10 +275,29 @@ public class WoverChunkGenerator extends NoiseBasedChunkGenerator implements
     public void wover_injectSurfaceRules(Object dimensionRegistry, String dimensionKey) {
         if (dimensionKey == null) return;
         ResourceKey<LevelStem> key = ResourceKey.create(Registries.LEVEL_STEM, Identifier.parse(dimensionKey));
+        if (LevelStem.END.equals(key)) wover_removeBlueprintEndWrapper();
+
         SurfaceRuleUtil.injectNoiseBasedSurfaceRules(
                 key,
                 generatorSettings(),
                 this.getBiomeSource()
         );
+    }
+
+    boolean wover_removeBlueprintEndWrapper() {
+        final BiomeSource currentSource = getBiomeSource();
+        final BiomeSource unwrappedSource = LithostitchedBiomeSourceCompat.unwrap(currentSource);
+        if (!BlueprintBiomeSourceCompat.canReplaceEndWrapper()
+                || currentSource == unwrappedSource
+                || !(unwrappedSource instanceof WoverEndBiomeSource)
+                || !(this instanceof ChunkGeneratorAccessor accessor)) {
+            return false;
+        }
+
+        accessor.wover_setBiomeSource(unwrappedSource);
+        if (unwrappedSource instanceof ReloadableBiomeSource reloadable) reloadable.reloadBiomes();
+        ChunkGeneratorHelper.rebuildFeaturesPerStep(this, unwrappedSource);
+        LibWoverWorldGenerator.C.log.info("Removed Blueprint End biome-source wrapper after importing its active overlays.");
+        return true;
     }
 }

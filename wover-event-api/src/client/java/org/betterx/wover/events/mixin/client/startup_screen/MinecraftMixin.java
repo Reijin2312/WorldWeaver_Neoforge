@@ -2,7 +2,7 @@ package org.betterx.wover.events.mixin.client.startup_screen;
 
 import org.betterx.wover.events.impl.client.ClientWorldLifecycleImpl;
 
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.screens.Screen;
 
 import org.spongepowered.asm.mixin.Mixin;
@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.List;
 import java.util.function.Function;
 
-@Mixin(Minecraft.class)
+@Mixin(Gui.class)
 public abstract class MinecraftMixin {
     @Inject(
             method = "addInitialScreens",

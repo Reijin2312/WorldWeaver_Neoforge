@@ -4,7 +4,6 @@ import org.betterx.wover.surface.api.noise.NumericProvider;
 
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.util.KeyDispatchDataCodec;
 import net.minecraft.world.level.levelgen.SurfaceRules.RuleSource;
 
 import java.util.List;
@@ -23,8 +22,6 @@ public final class SwitchRuleSource extends WoverSwitchRuleSource implements Rul
                             instance,
                             SwitchRuleSource::new
                     ));
-
-    private static final KeyDispatchDataCodec<? extends RuleSource> KEY_CODEC = KeyDispatchDataCodec.of(SwitchRuleSource.CODEC);
 
     private final NumericProvider selector;
     private final List<RuleSource> collection;
@@ -45,8 +42,8 @@ public final class SwitchRuleSource extends WoverSwitchRuleSource implements Rul
     }
 
     @Override
-    public @NotNull KeyDispatchDataCodec<? extends RuleSource> codec() {
-        return KEY_CODEC;
+    public @NotNull MapCodec<? extends RuleSource> codec() {
+        return CODEC;
     }
 
     @Override

@@ -7,6 +7,7 @@ import net.minecraft.server.RegistryLayer;
 import net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.WorldData;
+import net.minecraft.world.level.levelgen.WorldGenSettings;
 
 /**
  * Used for subscribers of the
@@ -24,11 +25,13 @@ public interface BeforeCreatingLevels extends Subscriber {
      * @param packRepository the pack repository of the world
      * @param registries     the registries of the world
      * @param worldData      the general data of the world
+     * @param worldGenSettings the active 26.2 world-generation settings, including the seed
      */
     void notify(
             LevelStorageSource.LevelStorageAccess storageAccess,
             PackRepository packRepository,
             LayeredRegistryAccess<RegistryLayer> registries,
-            WorldData worldData
+            WorldData worldData,
+            WorldGenSettings worldGenSettings
     );
 }

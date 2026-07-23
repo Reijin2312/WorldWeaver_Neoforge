@@ -3,6 +3,7 @@ package org.betterx.wover.biome.impl.modification.predicates;
 import org.betterx.wover.biome.api.modification.predicates.BiomePredicate;
 
 import net.minecraft.util.random.Weighted;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.KeyDispatchDataCodec;
 import net.minecraft.world.entity.EntityType;
@@ -17,7 +18,7 @@ public record Spawns(EntityType<?> entityType) implements BiomePredicate {
             );
 
     private static Spawns fromLocation(Identifier entityLocation) {
-        return new Spawns(EntityType.byString(entityLocation.toString()).orElseThrow());
+        return new Spawns(BuiltInRegistries.ENTITY_TYPE.getOptional(entityLocation).orElseThrow());
     }
 
     private Identifier entityLocation() {

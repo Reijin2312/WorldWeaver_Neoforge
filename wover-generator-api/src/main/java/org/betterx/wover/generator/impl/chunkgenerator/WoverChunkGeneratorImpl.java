@@ -1,10 +1,13 @@
 package org.betterx.wover.generator.impl.chunkgenerator;
 
 import org.betterx.wover.common.generator.api.chunkgenerator.RestorableBiomeSource;
+import org.betterx.wover.common.generator.api.chunkgenerator.RebuildableFeaturesPerStep;
+import org.betterx.wover.common.generator.impl.compat.LithostitchedBiomeSourceCompat;
 import org.betterx.wover.entrypoint.LibWoverWorldGenerator;
 import org.betterx.wover.events.api.WorldLifecycle;
 import org.betterx.wover.legacy.api.LegacyHelper;
 import org.betterx.wover.state.api.WorldState;
+import org.betterx.wover.generator.api.biomesource.WoverBiomeSource;
 
 import com.mojang.serialization.Lifecycle;
 import net.minecraft.core.*;
@@ -17,6 +20,7 @@ import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
+import net.minecraft.world.level.levelgen.WorldGenSettings;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.WorldData;
 
@@ -33,14 +37,56 @@ public class WoverChunkGeneratorImpl {
     public static void initialize() {
         WorldLifecycle.MINECRAFT_SERVER_READY.subscribe(WoverChunkGeneratorImpl::restoreInitialBiomeSourceInAllDimensions);
         WorldLifecycle.ON_DIMENSION_LOAD.subscribe(WoverChunkGeneratorImpl::repairBiomeSourceInAllDimensions);
+        WorldLifecycle.BEFORE_CREATING_LEVELS.subscribe(WoverChunkGeneratorImpl::initializeExternalBiomeSources);
         WorldLifecycle.BEFORE_CREATING_LEVELS.subscribe(WoverChunkGeneratorImpl::printInfo, -1000);
+    }
+
+    private static void initializeExternalBiomeSources(
+            LevelStorageSource.LevelStorageAccess ignoredStorageAccess,
+            PackRepository ignoredPackRepository,
+            LayeredRegistryAccess<RegistryLayer> registries,
+            WorldData ignoredWorldData,
+            WorldGenSettings worldGenSettings
+    ) {
+        final long seed = worldGenSettings.options().seed();
+        final RegistryAccess registryAccess = registries.compositeAccess();
+        final Registry<LevelStem> dimensions = registryAccess.lookupOrThrow(Registries.LEVEL_STEM);
+        LibWoverWorldGenerator.C.log.info(
+                "Initializing external biome sources from active dimensions registry ({} entries)",
+                dimensions.size()
+        );
+        for (var entry : dimensions.entrySet()) {
+            final ChunkGenerator generator = entry.getValue().generator();
+            final var loadedSource = generator.getBiomeSource();
+            final var sourceForCompatibility = LithostitchedBiomeSourceCompat.unwrap(loadedSource);
+            if (sourceForCompatibility instanceof WoverBiomeSource source
+                    && source.initializeExternalBiomeSource(
+                    seed,
+                    registryAccess,
+                    entry.getValue().type(),
+                    entry.getKey(),
+                    generator
+            )) {
+                if (LithostitchedBiomeSourceCompat.refreshPossibleBiomes(loadedSource, source.possibleBiomes())) {
+                    LibWoverWorldGenerator.C.log.info(
+                            "Refreshed Lithostitched biome cache for {} with {} possible biomes",
+                            entry.getKey().identifier(),
+                            loadedSource.possibleBiomes().size()
+                    );
+                }
+                if (generator instanceof RebuildableFeaturesPerStep<?> rebuildable) {
+                    rebuildable.wover_rebuildFeaturesPerStep();
+                }
+            }
+        }
     }
 
     private static void printInfo(
             LevelStorageSource.LevelStorageAccess levelStorageAccess,
             PackRepository packRepository,
             LayeredRegistryAccess<RegistryLayer> registryLayerLayeredRegistryAccess,
-            WorldData worldData
+            WorldData worldData,
+            WorldGenSettings ignoredWorldGenSettings
     ) {
         if (WorldState.registryAccess() != null) {
             final Registry<LevelStem> dimensionsRegistry = WorldState.registryAccess()

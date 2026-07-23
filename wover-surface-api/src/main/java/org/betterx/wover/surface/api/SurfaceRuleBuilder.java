@@ -4,6 +4,7 @@ import org.betterx.wover.surface.impl.BaseSurfaceRuleBuilder;
 import org.betterx.wover.surface.impl.SurfaceRuleBuilderImpl;
 
 import net.minecraft.core.Holder;
+import net.minecraft.core.HolderGetter;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.biome.Biome;
@@ -58,7 +59,7 @@ public interface SurfaceRuleBuilder extends BaseSurfaceRuleBuilder<SurfaceRuleBu
      *
      * @return {@link RuleSource}.
      */
-    RuleSource build();
+    RuleSource build(HolderGetter<Biome> biomes);
 
     /**
      * Register rule in the {@link SurfaceRuleRegistry} with the currently set sort priority (see {@link #sortPriority}).

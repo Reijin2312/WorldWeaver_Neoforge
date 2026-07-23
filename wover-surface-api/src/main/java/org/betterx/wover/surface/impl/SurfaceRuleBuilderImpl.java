@@ -8,6 +8,7 @@ import org.betterx.wover.surface.api.conditions.NoiseCondition;
 import org.betterx.wover.util.PriorityLinkedList;
 
 import net.minecraft.core.Holder;
+import net.minecraft.core.HolderGetter;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.biome.Biome;
@@ -308,10 +309,10 @@ public class SurfaceRuleBuilderImpl<T extends BaseSurfaceRuleBuilder<T>> impleme
      *
      * @return {@link SurfaceRules.RuleSource}.
      */
-    public SurfaceRules.RuleSource build() {
+    public SurfaceRules.RuleSource build(HolderGetter<Biome> biomes) {
         SurfaceRules.RuleSource rule = getRuleSource();
         if (biomeKey != null) {
-            rule = SurfaceRules.ifTrue(SurfaceRules.isBiome(biomeKey), rule);
+            rule = SurfaceRules.ifTrue(SurfaceRules.isBiome(biomes, biomeKey), rule);
         }
         return rule;
     }

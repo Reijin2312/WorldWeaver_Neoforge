@@ -40,9 +40,9 @@ public class UpdatesScreen extends WoverLayoutScreen {
         if (!RenderSystem.isOnRenderThread()) {
             Minecraft.getInstance()
                      .execute(() -> Minecraft.getInstance()
-                                             .setScreen(new UpdatesScreen(Minecraft.getInstance().screen)));
+                                                         .gui.setScreen(new UpdatesScreen(Minecraft.getInstance().gui.screen())));
         } else {
-            Minecraft.getInstance().setScreen(new UpdatesScreen(Minecraft.getInstance().screen));
+            Minecraft.getInstance().gui.setScreen(new UpdatesScreen(Minecraft.getInstance().gui.screen()));
         }
     }
 

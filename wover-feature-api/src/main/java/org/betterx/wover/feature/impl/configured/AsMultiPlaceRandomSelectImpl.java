@@ -156,7 +156,7 @@ public class AsMultiPlaceRandomSelectImpl extends FeatureConfiguratorImpl<Random
 
         return new RandomFeatureConfiguration(
                 features.subList(0, features.size() - 1),
-                features.get(features.size() - 1).feature
+                features.get(features.size() - 1).feature()
         );
     }
 

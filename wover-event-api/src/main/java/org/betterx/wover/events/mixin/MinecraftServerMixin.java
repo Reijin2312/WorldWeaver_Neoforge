@@ -10,10 +10,12 @@ import net.minecraft.server.RegistryLayer;
 import net.minecraft.server.Services;
 import net.minecraft.server.WorldStem;
 import net.minecraft.server.level.progress.LevelLoadListener;
+import net.minecraft.server.notifications.NotificationManager;
 import net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.WorldData;
+import net.minecraft.world.level.levelgen.WorldGenSettings;
 
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -47,6 +49,10 @@ public class MinecraftServerMixin {
     @Final
     protected WorldData worldData;
 
+    @Shadow
+    @Final
+    private WorldGenSettings worldGenSettings;
+
     @Inject(at = @At("RETURN"), method = "<init>")
     private void wover_initMinecraftServerLate(
             Thread thread,
@@ -59,6 +65,7 @@ public class MinecraftServerMixin {
             Services services,
             LevelLoadListener levelLoadListener,
             boolean propagatesCrashes,
+            NotificationManager notificationManager,
             CallbackInfo ci
     ) {
         //in most cases this call is redundant, as we already captured the registries from the
@@ -94,7 +101,8 @@ public class MinecraftServerMixin {
                 storageSource,
                 packRepository,
                 registries,
-                worldData
+                worldData,
+                worldGenSettings
         ));
     }
 }

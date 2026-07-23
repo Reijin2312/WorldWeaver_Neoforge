@@ -24,7 +24,7 @@ def allowLocalLibUse = true
 //When true, the local lib is also used in commandline builds
 def allowLocalLibInConsoleMode = true
 
-def WunderLibPath = '../WunderLib-26.1'
+def WunderLibPath = '../WunderLib-26.2'
 
 // #### Logic ####
 def isIDE = properties.containsKey('android.injected.invoked.from.ide')

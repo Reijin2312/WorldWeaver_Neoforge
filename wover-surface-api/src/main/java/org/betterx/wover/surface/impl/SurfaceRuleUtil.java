@@ -9,6 +9,7 @@ import org.betterx.wover.surface.api.AssignedSurfaceRule;
 import org.betterx.wover.surface.api.SurfaceRuleRegistry;
 
 import net.minecraft.core.Holder;
+import net.minecraft.core.HolderGetter;
 import net.minecraft.core.LayeredRegistryAccess;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
@@ -22,6 +23,7 @@ import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 import net.minecraft.world.level.levelgen.SurfaceRules;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.WorldData;
+import net.minecraft.world.level.levelgen.WorldGenSettings;
 
 import com.google.common.base.Stopwatch;
 
@@ -34,7 +36,7 @@ import java.lang.reflect.Method;
 import org.jetbrains.annotations.ApiStatus;
 
 public class SurfaceRuleUtil {
-    private static List<SurfaceRules.RuleSource> getRulesForBiome(ResourceKey<Biome> biomeKey) {
+    private static List<SurfaceRules.RuleSource> getRulesForBiome(HolderGetter<Biome> biomes, ResourceKey<Biome> biomeKey) {
         Registry<AssignedSurfaceRule> registry = null;
         if (WorldState.registryAccess() != null)
             registry = WorldState.registryAccess()
@@ -53,17 +55,21 @@ public class SurfaceRuleUtil {
 
         if (list.size() == 0) return List.of();
 
-        return List.of(SurfaceRules.ifTrue(SurfaceRules.isBiome(biomeKey), new SurfaceRules.SequenceRuleSource(list)));
+        return List.of(SurfaceRules.ifTrue(SurfaceRules.isBiome(biomes, biomeKey), new SurfaceRules.SequenceRuleSource(list)));
     }
 
     private static List<SurfaceRules.RuleSource> getRulesForBiomes(List<Optional<ResourceKey<Biome>>> biomes) {
+        if (WorldState.registryAccess() == null) {
+            throw new IllegalStateException("Registry access is not available while collecting biome surface rules");
+        }
+        HolderGetter<Biome> biomeLookup = WorldState.registryAccess().lookupOrThrow(Registries.BIOME);
         List<ResourceKey<Biome>> biomeIDs = biomes.stream()
                                                   .filter(Optional::isPresent)
                                                   .map(Optional::orElseThrow)
                                                   .toList();
 
         return biomeIDs.stream()
-                       .map(SurfaceRuleUtil::getRulesForBiome)
+                       .map(biome -> getRulesForBiome(biomeLookup, biome))
                        .flatMap(List::stream)
                        .collect(Collectors.toCollection(LinkedList::new));
     }
@@ -85,9 +91,8 @@ public class SurfaceRuleUtil {
                     .collect(Collectors.toList());
             if (additionalRules.isEmpty()) return null;
 
-            // when we are in the nether, we want to keep the nether roof and floor rules in the beginning of the sequence
-            // we will add our rules when the first biome test sequence is found.
-            // 1.21.11 changed nether surface rule structure in some setups, so the anchor may become nested.
+            // Minecraft 26.2 keeps bedrock and ceiling rules before the first biome-scoped Nether rule.
+            // Insert at that exact structural boundary so custom rules cannot replace the roof or floor.
             if (dimensionKey.equals(LevelStem.NETHER)) {
                 final List<SurfaceRules.RuleSource> combined = new ArrayList<>(existingSequence.size() + additionalRules.size());
                 boolean inserted = false;
@@ -99,12 +104,9 @@ public class SurfaceRuleUtil {
                     combined.add(rule);
                 }
                 if (!inserted) {
-                    // Fallback for alternate nether rule layouts: prepend biome-scoped rules.
-                    combined.addAll(0, additionalRules);
-                    LibWoverSurface.C.LOG.warn(
-                            "Unable to locate nether biome-rule anchor for {}; prepending {} additional rules.",
-                            source.getClass().getName(),
-                            additionalRules.size()
+                    throw new IllegalStateException(
+                            "Minecraft 26.2 Nether surface rules have no biome-rule anchor for "
+                                    + source.getClass().getName()
                     );
                 }
                 additionalRules = combined;
@@ -206,7 +208,8 @@ public class SurfaceRuleUtil {
             LevelStorageSource.LevelStorageAccess ignoredStorageAccess,
             PackRepository ignoredPackRepository,
             LayeredRegistryAccess<RegistryLayer> registries,
-            WorldData ignoredWorldData
+            WorldData ignoredWorldData,
+            WorldGenSettings ignoredWorldGenSettings
     ) {
         final Registry<LevelStem> dimensionRegistry = registries
                 .compositeAccess()

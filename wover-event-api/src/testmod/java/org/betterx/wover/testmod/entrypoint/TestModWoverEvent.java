@@ -44,7 +44,7 @@ public class TestModWoverEvent {
             );
         });
 
-        WorldLifecycle.BEFORE_CREATING_LEVELS.subscribe(((storageAccess, packRepository, registries, worldData) -> {
+        WorldLifecycle.BEFORE_CREATING_LEVELS.subscribe(((storageAccess, packRepository, registries, worldData, worldGenSettings) -> {
             C.LOG.info(
                     "Before creating levels: \n - {}\n - {}\n - {}\n - {}\n",
                     storageAccess,

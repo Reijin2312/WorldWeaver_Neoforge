@@ -67,7 +67,7 @@ public class BlockTagProvider extends WoverTagProvider.ForBlocks {
         ctx.add(CommonPoiTags.BEE_NEST, Blocks.BEE_NEST);
         ctx.add(CommonPoiTags.NETHER_PORTAL, Blocks.NETHER_PORTAL);
         ctx.add(CommonPoiTags.LODESTONE, Blocks.LODESTONE);
-        ctx.add(CommonPoiTags.LIGHTNING_ROD, Blocks.LIGHTNING_ROD);
+        ctx.add(CommonPoiTags.LIGHTNING_ROD, Blocks.LIGHTNING_ROD.asList().toArray(Block[]::new));
 
         ctx.addOptional(
                 WoverTagDatagen.VILLAGER_JOB_SITES,
@@ -273,6 +273,6 @@ public class BlockTagProvider extends WoverTagProvider.ForBlocks {
         );
 
         ctx.add(CommonBlockTags.CAULDRONS, Blocks.LAVA_CAULDRON, Blocks.WATER_CAULDRON, Blocks.POWDER_SNOW_CAULDRON);
-        ctx.add(CommonBlockTags.BEDS, Blocks.RED_BED, Blocks.BLACK_BED, Blocks.BLUE_BED, Blocks.BROWN_BED, Blocks.CYAN_BED, Blocks.GRAY_BED, Blocks.GREEN_BED, Blocks.LIGHT_BLUE_BED, Blocks.LIGHT_GRAY_BED, Blocks.LIME_BED, Blocks.MAGENTA_BED, Blocks.ORANGE_BED, Blocks.PINK_BED, Blocks.PURPLE_BED, Blocks.WHITE_BED, Blocks.YELLOW_BED);
+        ctx.add(CommonBlockTags.BEDS, Blocks.BED.asList().toArray(Block[]::new));
     }
 }

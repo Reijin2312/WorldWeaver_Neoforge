@@ -22,6 +22,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.WorldData;
+import net.minecraft.world.level.levelgen.WorldGenSettings;
 
 import java.util.*;
 import org.jetbrains.annotations.ApiStatus;
@@ -93,7 +94,8 @@ public class PoiManagerImpl {
             LevelStorageSource.LevelStorageAccess levelStorageAccess,
             PackRepository packRepository,
             LayeredRegistryAccess<RegistryLayer> registryLayerLayeredRegistryAccess,
-            WorldData worldData
+            WorldData worldData,
+            WorldGenSettings worldGenSettings
     ) {
         PoiManagerImpl.updateStates();
     }
